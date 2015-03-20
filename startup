@@ -3,7 +3,7 @@ if not shell then
   error()
 end
 
-local ok, err = loadfile('/kernel/main.lua')
+local ok, err = loadfile('/kernel/kernel/main.lua')
 
 if not ok then
   print(err)
