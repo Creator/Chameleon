@@ -1,10 +1,10 @@
 logf("[Chameleon] Loading.")
 
-if not fs.exists('/usr/etc/systemworker.conf') then
+if not fs.exists('/usr/etc/sysw.conf') then
   logf('[critical] System Worker configuration not found, exiting.')
 end
 
-local x = fs.open('/usr/etc/systemworker.conf', 'r')
+local x = fs.open('/usr/etc/sysw.conf', 'r')
 local data = textutils.unserialize(x.readAll())
 x.close()
 

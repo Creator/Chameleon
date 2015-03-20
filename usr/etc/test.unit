@@ -1,3 +1,0 @@
--- Unit File
-
-logf("_G.this =  %s", this)
