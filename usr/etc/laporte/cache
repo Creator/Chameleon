@@ -17,5 +17,51 @@
       },
       name = "laporte",
     },
+    {
+      desc = "The TARDIX kernel",
+      files = {
+        {
+          path = "/kernel/main.lua",
+          remote = "https://raw.githubusercontent.com/TARDIX/Kernel/master/kernel/main.lua",
+        },
+        {
+          path = "/kernel/workers/modw.lua",
+          remote = "https://raw.githubusercontent.com/TARDIX/Kernel/master/kernel/workers/modw.lua",
+        },
+        {
+          path = "/kernel/workers/sysw.lua",
+          remote = "https://raw.githubusercontent.com/TARDIX/Kernel/master/kernel/workers/sysw.lua",
+        },
+        {
+          path = "/kernel/modules/larball.lua",
+          remote = "https://raw.githubusercontent.com/TARDIX/Kernel/master/kernel/modules/larball.lua",
+        },
+        {
+          path = "/kernel/modules/syscall.lua",
+          remote = "https://raw.githubusercontent.com/TARDIX/Kernel/master/kernel/modules/syscall.lua",
+        },
+        {
+          path = "/kernel/modules/thread.lua",
+          remote = "https://raw.githubusercontent.com/TARDIX/Kernel/master/kernel/modules/thread.lua",
+        },
+        {
+          path = "/kernel/etc/tasks.list",
+          remote = "https://raw.githubusercontent.com/TARDIX/Kernel/master/kernel/etc/tasks.list",
+        },
+        {
+          path = "/kernel/lib/libk.lua",
+          remote = "https://raw.githubusercontent.com/TARDIX/Kernel/master/kernel/lib/libk.lua",
+        },
+        {
+          path = "/kernel/lib/module.lua",
+          remote = "https://raw.githubusercontent.com/TARDIX/Kernel/master/kernel/lib/module.lua",
+        },
+        {
+          path = "/kernel/lib/loop.lua",
+          remote = "https://raw.githubusercontent.com/TARDIX/Kernel/master/kernel/lib/loop.lua",
+        },
+      },
+      name = "tardix",
+    },
   },
 }
