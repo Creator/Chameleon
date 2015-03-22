@@ -1,0 +1,17 @@
+{
+  ['urls'] = {
+    "http://www.example.com"
+  },
+  ['packages'] = {
+    {
+      ['name'] = 'laporte',
+      ['files'] = {
+        {
+          ['path'] = '/.test/herp',
+          ['remote'] = "http://www.example.com"
+        }
+      }
+
+    }
+  }
+}

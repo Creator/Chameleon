@@ -8,33 +8,13 @@ local x = fs.open('/usr/etc/sysw.conf', 'r')
 local data = textutils.unserialize(x.readAll())
 x.close()
 
-local function _run_unit(v)
-  local fnc, err = loadfile(v)
-  if not fnc then error(err) end
-
-  local env = {}
-
-  function env.chain(file)
-    _run_unit(file)
-  end
-
-  function env.load(file)
-    dofile(file)
-  end
-
-  env.this = v
-  setmetatable(env, {__index = _G})
-
-  setfenv(fnc, env)
-
-  fnc()
-end
+local sysw = Task()
 
 for k, v in ipairs(data) do
-  logf("[sysw] Loading %s.", v)
-  if fs.exists(v) then
-    _run_unit(v)
-  else
-    logf("[sysw] %s does not exist.", v)
-  end
+  sysw:newThread(loadfile(v))
 end
+
+sysw:resume()
+sysw:update("sysw_start")
+sysw:stop()
+error()

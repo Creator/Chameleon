@@ -2,3 +2,7 @@
 	path = kernel
 	url = git@github.com:TARDIX/Kernel
 	branch = master
+[submodule "usr/share/laporte"]
+	path = usr/share/laporte
+	url = git@github.com:tardix/laporte
+	branch = master
