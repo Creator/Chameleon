@@ -1,7 +1,4 @@
 {
-  ['urls'] = {
-    "http://www.example.com"
-  },
   ['packages'] = {
     {
       ['name'] = 'laporte',
@@ -17,15 +14,5 @@
       },
       ['desc'] = 'Simple ackage manager for Chameleon.'
     },
-    {
-      ['name'] = 'herp',
-      ['files'] = {
-        {
-          ['path'] = '/.test/herp',
-          ['remote'] = 'http://www.meatspin.fr'
-        }
-      },
-      ['desc'] = 'Test package for Laporte'
-    }
   }
 }
