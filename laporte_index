@@ -12,7 +12,7 @@
           ['remote'] = "https://raw.githubusercontent.com/TARDIX/Laporte/master/lib.lua"
         }
       },
-      ['desc'] = 'Simple ackage manager for Chameleon.'
+      ['desc'] = 'Simple package manager for Chameleon.'
     },
   }
 }
