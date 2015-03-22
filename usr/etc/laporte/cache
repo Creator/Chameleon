@@ -1,31 +1,21 @@
 {
-  ['urls'] = {
-    "http://www.example.com"
+  urls = {
+    "https://raw.githubusercontent.com/TARDIX/Chameleon/master/laporte_index",
   },
-  ['packages'] = {
+  packages = {
     {
-      ['name'] = 'laporte',
-      ['files'] = {
+      desc = "Simple ackage manager for Chameleon.",
+      files = {
         {
-          ['path'] = '/usr/share/laporte/main.lua',
-          ['remote'] = "https://raw.githubusercontent.com/TARDIX/Laporte/master/main.lua"
+          path = "/usr/share/laporte/main.lua",
+          remote = "https://raw.githubusercontent.com/TARDIX/Laporte/master/main.lua",
         },
         {
-          ['path'] = '/usr/share/laporte/lib.lua',
-          ['remote'] = "https://raw.githubusercontent.com/TARDIX/Laporte/master/lib.lua"
-        }
+          path = "/usr/share/laporte/lib.lua",
+          remote = "https://raw.githubusercontent.com/TARDIX/Laporte/master/lib.lua",
+        },
       },
-      ['desc'] = 'Simple ackage manager for Chameleon.'
+      name = "laporte",
     },
-    {
-      ['name'] = 'herp',
-      ['files'] = {
-        {
-          ['path'] = '/.test/herp',
-          ['remote'] = 'http://www.meatspin.fr'
-        }
-      },
-      ['desc'] = 'Test package for Laporte'
-    }
-  }
+  },
 }
