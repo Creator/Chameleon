@@ -7,8 +7,12 @@
       ['name'] = 'laporte',
       ['files'] = {
         {
-          ['path'] = '/.test/herp',
-          ['remote'] = "http://www.example.com"
+          ['path'] = '/usr/share/laporte/main.lua',
+          ['remote'] = "https://raw.githubusercontent.com/TARDIX/Laporte/master/main.lua"
+        },
+        {
+          ['path'] = '/usr/share/laporte/lib.lua',
+          ['remote'] = "https://raw.githubusercontent.com/TARDIX/Laporte/master/lib.lua"
         }
       }
 
