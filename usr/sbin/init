@@ -1,20 +1,26 @@
-logf("[Chameleon] Loading.")
+logf("Chameleon - Loading")
+local sysw_daemons = process.main:spawnSubprocess("daemons")
+sleep(10)
+sysw_daemons:spawnThread(function()
+  while true do
+    print("1  ")
+    local e = coroutine.yield()
+    if e == "terminate" then
+      error()
+    end
+  end
+end)
 
-if not fs.exists('/usr/etc/sysw.conf') then
-  logf('[critical] System Worker configuration not found, exiting.')
+sysw_daemons:spawnThread(function()
+  while true do
+    print("2")
+    local e = coroutine.yield()
+    if e == "terminate" then
+      error()
+    end
+  end
+end)
+
+while true do
+  sysw_daemons:update("hello")
 end
-
-local x = fs.open('/usr/etc/sysw.conf', 'r')
-local data = textutils.unserialize(x.readAll())
-x.close()
-
-local sysw = Task()
-
-for k, v in ipairs(data) do
-  sysw:newThread(loadfile(v))
-end
-
-sysw:resume()
-sysw:update("sysw_start")
-sysw:stop()
-error()
