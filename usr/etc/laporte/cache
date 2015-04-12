@@ -2,7 +2,7 @@
   urls = {
     "https://raw.githubusercontent.com/TARDIX/Chameleon/master/laporte_index",
   },
-  pack  ages = {
+  packages = {
     {
       desc = "Simple package manager for Chameleon.",
       files = {
