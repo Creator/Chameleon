@@ -1,12 +1,17 @@
-if not shell then
-  print('Error: this is only for debug mode.')
-  error()
+if not shell then error() end
+local function readfile(file)
+  local x = fs.open(file, 'r')
+  if not x then
+    error("Can not open file "..file,2)
+  end
+  local ret = x.readAll()
+  x.close()
+  return ret
 end
 
-local ok, err = loadfile('/kernel/kernel/main.lua')
-
-if not ok then
-  print(err)
+if fs.exists('/.bootrc') then
+  local kernel = readfile('/.bootrc')
+  loadfile(fs.combine(kernel, '/main.lua'))(kernel)
+else
+  loadfile('/kernelnext/main.lua')('/kernelnext')
 end
-
-ok('/kernel/kernel')

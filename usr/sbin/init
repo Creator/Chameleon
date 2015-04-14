@@ -1,1 +1,41 @@
-logf("Chameleon - Loaded")
+logf('Starting sysw-intree from %s;', _FILE)
+local _sysw_dir = fs.getDir(_FILE)
+local libsys
+
+do
+  if fs.getDrive(_FILE) == 'rom' then
+    logf('[sysw-intree] starting from rom.')
+    if fs.exists('/rom/lib/libsys.lua') then
+      libsys = loadfile('/rom/lib/libsys.lua')()
+    else
+      logf('[sysw-intree] could not determine libsys path for ROM installation, exiting.')
+      error()
+    end
+  else
+    if fs.exists('/usr/lib/libsys.lua') then
+      libsys = loadfile('/usr/lib/libsys.lua')()
+    else
+      logf('[sysw-intree] could not load /usr/lib/libsys.lua. Are you sure you\'re using the correct version for your distribuition?')
+    end
+  end
+
+  if not libsys then
+    logf('[sysw-intree] failed to load libsys; can not proceed.')
+    error()
+  end
+end
+
+local cfg
+
+do
+  -- parse config file
+  if fs.exists('/usr/etc/sysw.conf') then
+    cfg = textutils.unserialize(readfile('/usr/etc/sysw.conf'))
+  else
+    logf('[sysw-intree] failed to load config; can not proceed.')
+    error()
+  end
+end
+
+_G.spec = libsys.load(cfg)
+spec:run('init')
