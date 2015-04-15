@@ -11,6 +11,7 @@ end
 
 if fs.exists('/.bootrc') then
   local kernel = readfile('/.bootrc')
+  print(fs.combine(kernel, '/main.lua'))
   loadfile(fs.combine(kernel, '/main.lua'))(kernel)
 else
   loadfile('/kernelnext/main.lua')('/kernelnext')

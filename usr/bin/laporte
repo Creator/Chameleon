@@ -1,1 +1,58 @@
-loadfile('/usr/share/laporte/main.lua')(...)
+local tArgs = {...}
+local ops = {}
+
+local libporte = loadfile('/usr/lib/libporte.lua')()
+
+local function switch(val, tab, param)
+  if not tab[val] then
+    printError("No tab val!")
+    error()
+  end
+  tab[val](param)
+end
+
+local function doTask(task, arg)
+  switch (task, {
+    ['install'] = libporte.install,
+    ['update'] = libporte.update,
+    ['remove'] = libporte.remove,
+    ['sync'] = libporte.cache.build,
+    ['query'] = libporte.cache.query,
+    ['update-cache'] = libporte.cache.build,
+    ['add-repo'] = libporte.cache.addrepo,
+    ['prefix'] = libporte.prefix,
+    ['nodeps'] = libporte.nodeps,
+  }, arg)
+end
+
+for opt, arg in getopt('SCDI:R:U:Q:A:P:', ...) do
+  if opt == 'S' then
+    table.insert(ops, {'sync'})
+  elseif opt == 'I' and arg then
+    table.insert(ops, {'install', arg})
+  elseif opt == 'R' and arg then
+    table.insert(ops, {'remove', arg})
+  elseif opt == 'U' and arg then
+    table.insert(ops, {'update', arg})
+  elseif opt == 'Q' and arg then
+    table.insert(ops, {'query', arg})
+  elseif opt == 'C' then
+    table.insert(ops, {'update-cache'})
+  elseif opt == 'A' then
+    table.insert(ops, {'add-repo'})
+  elseif opt == 'P' then
+    table.insert(ops, 1, {'prefix', arg})
+  elseif opt == 'D' then
+    table.insert(ops, 1, {'nodeps'})
+  else
+    printError('Unregocnized command line option ',  opt)
+    error()
+  end
+end
+
+for i = 1, #ops do
+  doTask(ops[i][1], ops[i][2] and ops[i][2] or 0)
+end
+
+
+--eof

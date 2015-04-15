@@ -15,30 +15,16 @@
       ['desc'] = 'Simple package manager for Chameleon.'
     },
     {
-      ['name'] = 'tardix',
       ['files'] = {
         {
-          ['path'] = '/kernel/main.lua',
-          ['remote'] = 'https://raw.githubusercontent.com/TARDIX/Kernel/master/kernel/main.lua'
-        },
-        {
-          ['path'] = '/kernel/modules/larball.lua',
-          ['remote'] = 'https://raw.githubusercontent.com/TARDIX/Kernel/master/kernel/modules/larball.lua'
-        },
-        {
-          ['path'] = '/kernel/modules/vfs.lua',
-          ['remote'] = 'https://raw.githubusercontent.com/TARDIX/Kernel/master/kernel/modules/vfs.lua'
-        },
-        {
-          ['path'] = '/kernel/modules/lambda.lua',
-          ['remote'] = 'https://raw.githubusercontent.com/TARDIX/Kernel/master/kernel/modules/lambda.lua'
-        },
-        {
-          ['path'] = '/kernel/lib/libk.lua',
-          ['remote'] = 'https://raw.githubusercontent.com/TARDIX/Kernel/master/kernel/lib/libk.lua'
+          ['path'] = "/usr/etc/laporte/pkg/kernel.lar",
+          ['remote'] = "http://pastebin.com/raw.php?i=GqYxLaV2",
+          ['isLar'] = true,
+          ['root'] = "/"
         },
       },
-      ['desc'] = 'The TARDIX kernel'
+      name = "tardix",
+      desc = "The TARDIX kernel",
     }
   }
 }
