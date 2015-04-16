@@ -112,11 +112,7 @@ function libporte.install(arg)
             larball.untab(fs.combine(prefix, x.packages[i].files[j].root),
               textutils.unserialize(base64.decode(data.readAll())))
           else
-            local h = fs.open(fs.combine(prefix,
-              x.packages[i].files[j].path), 'w')
-            print('Get: ', x.packages[i].files[j].remote, '\n\tTo: ', fs.combine(prefix, x.packages[i].files[j].path))
-            h.write(data.readAll())
-            h.close()
+            http.save(x.packages[i].files[j].remote, x.packages[i].files[j].path)
           end
         end
 

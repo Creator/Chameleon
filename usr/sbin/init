@@ -1,31 +1,7 @@
-logf('Starting sysw-intree from %s;', _FILE)
-local _sysw_dir = fs.getDir(_FILE)
-local libsys
+logf('Starting sysw-intree from %s', _FILE or 'not executed with execl... :M')
+local _sysw_dir = fs.getDir(_FILE or '/')
 
-do
-  if fs.getDrive(_FILE) == 'rom' then
-    logf('[sysw-intree] starting from rom.')
-    if fs.exists('/rom/lib/libsys.lua') then
-      libsys = loadfile('/rom/lib/libsys.lua')()
-    else
-      logf('[sysw-intree] could not determine libsys path for ROM installation, exiting.')
-      error()
-    end
-  else
-    if fs.exists('/usr/lib/libsys.lua') then
-      libsys = loadfile('/usr/lib/libsys.lua')()
-    else
-      logf('[sysw-intree] could not load /usr/lib/libsys.lua. Are you sure you\'re using the correct version for your distribuition?')
-    end
-  end
-
-  if not libsys then
-    logf('[sysw-intree] failed to load libsys; can not proceed.')
-    error()
-  end
-end
-
-local cfg
+local cfg = {}
 
 do
   -- parse config file
@@ -37,5 +13,94 @@ do
   end
 end
 
-_G.spec = libsys.load(cfg)
-spec:run('init')
+local fromDir = {}
+
+do
+  if fs.exists('/usr/etc/sysw.d') then
+    if fs.isDir('/usr/etc/sysw.d') then
+      for k, v in pairs(listAll('/usr/etc/sysw.d')) do
+        if not fs.isDir(v) then
+          table.insert(fromDir, textutils.unserialize(readfile(v)))
+        end
+      end
+    else
+      logf('Found sysw.d.. but it\'s a file?')
+    end
+  end
+
+  do
+    --unify
+    for k, v in pairs(fromDir) do
+      table.dump(v)
+      for k1, v1 in pairs(v) do
+        table.dump(v1)
+        if not cfg[k1] then cfg[k1] = {} end
+        if type(v1) == 'table' then
+          for k2, v2 in pairs(v1) do
+            cfg[k1][k2] = v2
+          end
+        else
+          cfg[k1] = v1
+        end
+      end
+    end
+  end
+end
+local initThread;
+
+if cfg['initProgram'] then
+  initThread = process.this:spawnThread(loadfile(cfg['initprogram']), 'mainProgram')
+else
+  initThread = process.this:spawnThread(loadfile('/rom/programs/lua'), 'mainProgram')
+end
+initThread:update()
+
+local syswHandler = process.this:spawnThread(function()
+  while true do
+    local data = {coroutine.yield()}
+    if data[1] == 'sysw' then
+      if data[2] then
+        if data[2] == 'reboot' then os.reboot() else
+          for k, v in pairs(cfg) do
+            if v.event and v.event == data[2] then
+              if v.handlerFunc then
+                v.handlerFunc(table.from(data,2))
+              else
+                loadfile(v.handler)(table.from(data,2))
+              end
+            end
+          end
+        end
+      end
+    elseif data[1] == 'fail' then
+        logf('O my, %s failed! (sysw-errors)', data[2])
+    else
+      coroutine.fire('sysw', unpack(table.from(data,1)))
+    end
+  end
+end, 'sysw-handler')
+_G.sysw = {}
+
+function sysw.exit()
+  coroutine.fire('sysw', 'reboot')
+end
+
+function sysw.registerHandler(event, handlerFunc)
+  table.insert(cfg, {
+    ["event"] = event,
+    ["handlerFunc"] = handlerFunc
+  })
+end
+
+process.this:update()
+process.this:update('sysw','init')
+
+while true do
+  local data = {coroutine.yield()}
+  if data[1] == 'terminate' then
+    break
+  end
+  local ret = process.this:update(unpack(data))
+end
+
+os.shutdown()

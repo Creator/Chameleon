@@ -1,4 +1,15 @@
-if not shell then error() end
+
+
+local options = {}
+local comment = {}
+local selected = 1
+local scroll = 0
+
+
+local function load(i)
+    loadfile(fs.combine(options[i], '/main.lua'))(options[i])
+end
+
 local function readfile(file)
   local x = fs.open(file, 'r')
   if not x then
@@ -9,10 +20,82 @@ local function readfile(file)
   return ret
 end
 
-if fs.exists('/.bootrc') then
-  local kernel = readfile('/.bootrc')
-  print(fs.combine(kernel, '/main.lua'))
-  loadfile(fs.combine(kernel, '/main.lua'))(kernel)
-else
-  loadfile('/kernelnext/main.lua')('/kernelnext')
+do
+  if fs.exists('/.bootrc') then
+    options = textutils.unserialize(readfile('/.bootrc'))['options']
+    comment = textutils.unserialize(readfile('/.bootrc'))['comment']
+  else
+    options = {
+      "/kernelnext"
+    }
+    comment = {
+      "Next generation tardix kernel"
+    }
+  end
+end
+
+local w, h = term.getSize()
+
+local msg = "Chameleon Bootloader"
+
+local function draw()
+	-- clear with black screen
+	term.setBackgroundColour( 32768 )
+	term.setTextColour( 1 )
+	term.clear()
+
+	-- write title in centre
+	term.setCursorPos( w / 2 - #msg / 2 + 1, 2 )
+	term.write( msg )
+
+	-- borders
+	term.setCursorPos( 1, 4 )
+	term.write( ("-"):rep( w ) )
+	term.setCursorPos( 1, h - 3 )
+	term.write( ("-"):rep( w ) )
+
+	-- info at bottom
+	term.setCursorPos( 1, h - 1 )
+	write "Use arrow keys to navigate (up, down, enter to select)"
+
+	-- draw the options
+	for i = 1, #options do
+		local y = i + scroll + 5
+		if y >= 6 and y < h - 4 then
+			if selected == i then
+				local tl = math.min( w, 2 + #(options[i]..' - '.. comment[i]))
+				term.setBackgroundColour( 1 )
+				term.setTextColour( 32768 )
+				term.setCursorPos( 1, y )
+				term.write( "> " .. options[i] .. ' - '.. comment[i] .. (" "):rep( w - tl ) )
+				term.setBackgroundColour( 32768 )
+				term.setTextColour( 1 )
+			else
+				term.setCursorPos( 3, y )
+				term.write( options[i] .. ' - '.. comment[i] )
+			end
+		end
+	end
+end
+
+local function setSelection( n )
+	selected = n
+	if selected + scroll < 1 then
+		scroll = 1 - selected
+	elseif selected + scroll > h - 10 then
+		scroll = ( h - 10 ) - selected
+	end
+end
+
+while true do
+	draw()
+	local ev = { coroutine.yield() }
+
+	if ev[1] == "key" and ev[2] == keys.up and selected > 1 then
+		setSelection( selected - 1 )
+	elseif ev[1] == "key" and ev[2] == keys.down and selected < #options then
+		setSelection( selected + 1 )
+	elseif ev[1] == "key" and ev[2] == keys.enter then
+		load( selected )
+	end
 end

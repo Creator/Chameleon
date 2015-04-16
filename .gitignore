@@ -1,3 +1,6 @@
 kernel.log
 .test
 herp
+
+usr/etc/laporte/cache
+usr/etc/laporte/pkg
