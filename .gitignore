@@ -4,3 +4,5 @@ herp
 
 usr/etc/laporte/cache
 usr/etc/laporte/pkg
+
+tmp/

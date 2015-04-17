@@ -1,0 +1,17 @@
+local options = {...}
+local libcell = loadfile('/usr/lib/libcell.lua')()
+
+local operation = options[1]
+local others = table.from(options, 1)
+
+if operation == 'generate' then
+  local x = fs.open((others[1]:sub(-#('-cell')) == '.cell'
+    and others[1] or others[1] .. '.cell'), 'r')
+
+  local data = textutils.unserialize(x.readAll())
+  x.close()
+
+  libcell.generate(data, (data.name..'.lar'))
+elseif operation == 'install' then
+  libcell.install(others[1])
+end

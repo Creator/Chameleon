@@ -97,5 +97,6 @@ while true do
 		setSelection( selected + 1 )
 	elseif ev[1] == "key" and ev[2] == keys.enter then
 		load( selected )
+    break
 	end
 end

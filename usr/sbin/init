@@ -60,20 +60,18 @@ local syswHandler = process.this:spawnThread(function()
     local data = {coroutine.yield()}
     if data[1] == 'sysw' then
       if data[2] then
-        if data[2] == 'reboot' then os.reboot() else
-          for k, v in pairs(cfg) do
-            if v.event and v.event == data[2] then
-              if v.handlerFunc then
-                v.handlerFunc(table.from(data,2))
-              else
-                loadfile(v.handler)(table.from(data,2))
-              end
+        for k, v in pairs(cfg) do
+          if v.event and v.event == data[2] then
+            if v.handlerFunc then
+              v.handlerFunc(table.from(data,1))
+            else
+              loadfile(v.handler)(table.from(data,1))
             end
           end
         end
       end
     elseif data[1] == 'fail' then
-        logf('O my, %s failed! (sysw-errors)', data[2])
+      logf('O my, %s failed! (sysw-errors)', data[2])
     else
       coroutine.fire('sysw', unpack(table.from(data,1)))
     end
@@ -92,15 +90,22 @@ function sysw.registerHandler(event, handlerFunc)
   })
 end
 
+function sysw.patch()
+  dofile(fs.combine(_G.params.root, '/lib/libk.lua'))
+  modules.reloadAllModules()
+end
+
+sysw.registerHandler('start-shell', function()
+  error()
+end)
+
 process.this:update()
 process.this:update('sysw','init')
 
 while true do
   local data = {coroutine.yield()}
   if data[1] == 'terminate' then
-    break
+    error()
   end
   local ret = process.this:update(unpack(data))
 end
-
-os.shutdown()
