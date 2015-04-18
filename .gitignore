@@ -6,9 +6,6 @@ usr/etc/laporte/cache
 usr/etc/laporte/pkg
 
 tmp/
-usr/dev
-usr/dev/
-usr/dev/**
-
-dev/
 dev/**
+dev
+dev/
