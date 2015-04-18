@@ -1,3 +1,6 @@
+term.clear()
+term.setCursorPos(1,1)
+
 logf('Starting sysw-intree from %s', _FILE or 'not executed with execl... :M')
 local _sysw_dir = fs.getDir(_FILE or '/')
 
@@ -107,8 +110,7 @@ function sysw.patch()
   dofile(fs.combine(_G.params.root, '/lib/libk.lua'))
   modules.reloadAllModules()
 end
-term.clear()
-term.setCursorPos(1,1)
+
 process.this:update()
 process.this:update('init')
 

@@ -1,5 +1,7 @@
 local args = {...}
 
 if args[1] == 'rednet_message' then
-	print("Rednet message received. Data: ", args[4])
+	local x = fs.open('/usr/dev/rdn/inp', fs.exists('/usr/dev/rdn/inp') and 'a' or 'w')
+	x.writeLine(args[3])
+	x.close()
 end
