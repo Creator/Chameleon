@@ -1,0 +1,5 @@
+local args = {...}
+
+if args[1] == 'peripheral' then
+	print('Peripheral connected on side: ' .. args[2])
+end

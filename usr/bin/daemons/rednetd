@@ -1,0 +1,5 @@
+local args = {...}
+
+if args[1] == 'rednet_message' then
+	print("Rednet message received. Data: ", args[4])
+end
