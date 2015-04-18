@@ -48,6 +48,10 @@ do
 end
 local initThread;
 
+if not process.this then
+  process.this = process.main:spawnSubprocess('/usr/sbin/init')
+end
+
 if cfg['initProgram'] then
   initThread = process.this:spawnThread(loadfile(cfg['initprogram']), 'mainProgram')
 else
@@ -55,25 +59,33 @@ else
 end
 initThread:update()
 
+local handlers = {};
+
+do
+  for k, v in pairs(cfg) do
+    if v.event then
+      if handlers and handlers[v.event] then
+        table.insert(handlers[v.event], v)
+      else
+        handlers[v.event] = {
+          v
+        }
+      end
+    end
+  end
+end
+
 local syswHandler = process.this:spawnThread(function()
   while true do
     local data = {coroutine.yield()}
-    if data[1] == 'sysw' then
-      if data[2] then
-        for k, v in pairs(cfg) do
-          if v.event and v.event == data[2] then
-            if v.handlerFunc then
-              v.handlerFunc(table.from(data,1))
-            else
-              loadfile(v.handler)(table.from(data,1))
-            end
-          end
+    if handlers[data[1]] then
+      for k, v in pairs(handlers[data[1]]) do
+        if v.handlerFunc then 
+          v.handlerFunc(unpack(data))
+        elseif v.handler then
+          loadfile(v.handler)(unpack(data))
         end
       end
-    elseif data[1] == 'fail' then
-      logf('O my, %s failed! (sysw-errors)', data[2])
-    else
-      coroutine.fire('sysw', unpack(table.from(data,1)))
     end
   end
 end, 'sysw-handler')
@@ -100,7 +112,7 @@ sysw.registerHandler('start-shell', function()
 end)
 
 process.this:update()
-process.this:update('sysw','init')
+process.this:update('init')
 
 while true do
   local data = {coroutine.yield()}
