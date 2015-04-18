@@ -10,16 +10,31 @@ function libcell.generate(data, to)
     printf(':: Generating cell \'%s\'.\n', data.name)
     printf('-> Compiling required files.')
     for k, v in pairs(data.files) do
+      local rID = getRandomString('xxyy-xyy-xxyy')
+      if not v.source and v.remote then
+        v.source = ("/tmp/%s/%s"):format(data.name, rID)
+        local x = http.get(v.remote)
+        print(v.source)
+        local h = fs.open(v.source, 'w')
+        h.write(x.readAll())
+        h.close()
+      end
+      if not fs.exists(v.source) then
+        printf('-> Error: file \'%s\' (required for \'%s\') doesn\'t exist.', v.source, v.output)
+        error()
+      end
       printf('\t-> Compiling \'%s\'.', v.source, fs.combine('/tmp', data.name), v.output)
+
       ExecutableWriter()
         :addMainFunction(loadfile(v.source))
         :write(fs.combine(fs.combine('/tmp', data.name), v.output))
-        table.insert(tmpfiles, fs.combine(fs.combine('/tmp', data.name), v.output))
+
     end
     local tab = {}
     print('-> Generating archive.')
     for k, v in pairs(data.install) do
       printf('\t-> Archiving \'%s\'.', v.target)
+      print(fs.combine(fs.combine('/tmp', data.name),v.source))
       local source = fs.open(fs.combine(fs.combine('/tmp', data.name),v.source), 'r')
       local srcdat = source.readAll()
       source.close()
@@ -47,12 +62,7 @@ function libcell.generate(data, to)
     printf('-> Done writing archive \'%s\'.', to)
   end
   printf('-> Removing temporary files.')
-  if #tmpfiles ~= 0 then
-    for k, v in pairs(tmpfiles) do
-      printf('\t-> Removed temporary file \'%s\'', fs.getName(v))
-      fs.delete(v)
-    end
-  end
+  fs.delete(('/tmp/%s'):format(data.name))
   printf('-> Done removing temporary files.')
   printf('\n:: Done.')
 end

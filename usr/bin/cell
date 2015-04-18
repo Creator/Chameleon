@@ -5,13 +5,21 @@ local operation = options[1]
 local others = table.from(options, 1)
 
 if operation == 'generate' then
-  local x = fs.open((others[1]:sub(-#('-cell')) == '.cell'
-    and others[1] or others[1] .. '.cell'), 'r')
-
+  local x;
+  if fs.exists(tostring(others[1])) then
+    x = fs.open(tostring(others[1]), 'r')
+  elseif fs.exists((tostring(others[1]):sub(-#('-cell')) == '.cell'
+    and tostring(others[1]) or tostring(others[1]) .. '.cell')) then
+    x = fs.open((tostring(others[1]):sub(-#('-cell')) == '.cell'
+      and tostring(others[1]) or tostring(others[1]) .. '.cell'), 'r')
+  else
+    printf("Error: file \'%s\' not found.", tostring(others[1]))
+    error()
+  end
   local data = textutils.unserialize(x.readAll())
   x.close()
 
   libcell.generate(data, (data.name..'.lar'))
 elseif operation == 'install' then
-  libcell.install(others[1])
+  libcell.install(tostring(others[1]))
 end
