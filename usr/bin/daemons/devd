@@ -27,12 +27,12 @@ if not _G.devices then
 	_G.devices = {}
 end
 
-if fs.exists('/usr/dev') then
-	fs.delete('/usr/dev')
+if fs.exists('/dev') then
+	fs.delete('/dev')
 end
 
 if args[1] == 'peripheral' then
-	local x = fs.open(('/usr/dev/%s/%s'):format(peripheral.getType(args[2]), args[2]), 'w')
+	local x = fs.open(('/dev/%s/%s'):format(peripheral.getType(args[2]), args[2]), 'w')
 	x.writeLine('')
 	x.close()
 	if not _G.devices[args[2]] then
@@ -48,7 +48,7 @@ if args[1] == 'peripheral' then
 		end
 elseif args[1] == 'init' then
 	for k, v in pairs(peripheral.getNames()) do
-		local x = fs.open(('/usr/dev/%s/%s'):format(peripheral.getType(v), v), 'w')
+		local x = fs.open(('/dev/%s/%s'):format(peripheral.getType(v), v), 'w')
 		x.writeLine('')
 		x.close()
 		if not _G.devices[peripheral.getType(v)] then
