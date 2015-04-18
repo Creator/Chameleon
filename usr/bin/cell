@@ -3,7 +3,9 @@ local libcell = loadfile('/usr/lib/libcell.lua')()
 
 local operation = options[1]
 local others = table.from(options, 1)
-
+if operation == nil then
+  print("Usage:\n cell generate <file>\n cell install <file>\n")
+end
 if operation == 'generate' then
   local x;
   if fs.exists(tostring(others[1])) then

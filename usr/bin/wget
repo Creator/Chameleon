@@ -1,0 +1,7 @@
+local tArgs = {...}
+local x = http.get(tArgs[1])
+local h = fs.open(tArgs[2], 'w')
+h.write(x.readAll())
+h.close()
+
+print(":: Done.")
