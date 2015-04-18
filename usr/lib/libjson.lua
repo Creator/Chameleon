@@ -1,274 +1,33 @@
-local VERSION = 20141223.14 -- version history at end of file
-local AUTHOR_NOTE = "-[ JSON.lua package by Jeffrey Friedl (http://regex.info/blog/lua/json) version 20141223.14 ]-"
+--[[
+The MIT License (MIT)
 
---
--- The 'AUTHOR_NOTE' variable exists so that information about the source
--- of the package is maintained even in compiled versions. It's also
--- included in OBJDEF below mostly to quiet warnings about unused variables.
---
+Copyright (c) 2014-2015 the TARDIX team
+
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+]]
+local VERSION = 20141223.14 -- version history at end of file
+
 local OBJDEF = {
    VERSION      = VERSION,
-   AUTHOR_NOTE  = AUTHOR_NOTE,
 }
 
-
---
--- Simple JSON encoding and decoding in pure Lua.
--- http://www.json.org/
---
---
---   JSON = assert(loadfile "JSON.lua")() -- one-time load of the routines
---
---   local lua_value = JSON:decode(raw_json_text)
---
---   local raw_json_text    = JSON:encode(lua_table_or_value)
---   local pretty_json_text = JSON:encode_pretty(lua_table_or_value) -- "pretty printed" version for human readability
---
---
---
--- DECODING (from a JSON string to a Lua table)
---
---
---   JSON = assert(loadfile "JSON.lua")() -- one-time load of the routines
---
---   local lua_value = JSON:decode(raw_json_text)
---
---   If the JSON text is for an object or an array, e.g.
---     { "what": "books", "count": 3 }
---   or
---     [ "Larry", "Curly", "Moe" ]
---
---   the result is a Lua table, e.g.
---     { what = "books", count = 3 }
---   or
---     { "Larry", "Curly", "Moe" }
---
---
---   The encode and decode routines accept an optional second argument,
---   "etc", which is not used during encoding or decoding, but upon error
---   is passed along to error handlers. It can be of any type (including nil).
---
---
---
--- ERROR HANDLING
---
---   With most errors during decoding, this code calls
---
---      JSON:onDecodeError(message, text, location, etc)
---
---   with a message about the error, and if known, the JSON text being
---   parsed and the byte count where the problem was discovered. You can
---   replace the default JSON:onDecodeError() with your own function.
---
---   The default onDecodeError() merely augments the message with data
---   about the text and the location if known (and if a second 'etc'
---   argument had been provided to decode(), its value is tacked onto the
---   message as well), and then calls JSON.assert(), which itself defaults
---   to Lua's built-in assert(), and can also be overridden.
---
---   For example, in an Adobe Lightroom plugin, you might use something like
---
---          function JSON:onDecodeError(message, text, location, etc)
---             LrErrors.throwUserError("Internal Error: invalid JSON data")
---          end
---
---   or even just
---
---          function JSON.assert(message)
---             LrErrors.throwUserError("Internal Error: " .. message)
---          end
---
---   If JSON:decode() is passed a nil, this is called instead:
---
---      JSON:onDecodeOfNilError(message, nil, nil, etc)
---
---   and if JSON:decode() is passed HTML instead of JSON, this is called:
---
---      JSON:onDecodeOfHTMLError(message, text, nil, etc)
---
---   The use of the fourth 'etc' argument allows stronger coordination
---   between decoding and error reporting, especially when you provide your
---   own error-handling routines. Continuing with the the Adobe Lightroom
---   plugin example:
---
---          function JSON:onDecodeError(message, text, location, etc)
---             local note = "Internal Error: invalid JSON data"
---             if type(etc) = 'table' and etc.photo then
---                note = note .. " while processing for " .. etc.photo:getFormattedMetadata('fileName')
---             end
---             LrErrors.throwUserError(note)
---          end
---
---            :
---            :
---
---          for i, photo in ipairs(photosToProcess) do
---               :
---               :
---               local data = JSON:decode(someJsonText, { photo = photo })
---               :
---               :
---          end
---
---
---
---
---
--- DECODING AND STRICT TYPES
---
---   Because both JSON objects and JSON arrays are converted to Lua tables,
---   it's not normally possible to tell which original JSON type a
---   particular Lua table was derived from, or guarantee decode-encode
---   round-trip equivalency.
---
---   However, if you enable strictTypes, e.g.
---
---      JSON = assert(loadfile "JSON.lua")() --load the routines
---      JSON.strictTypes = true
---
---   then the Lua table resulting from the decoding of a JSON object or
---   JSON array is marked via Lua metatable, so that when re-encoded with
---   JSON:encode() it ends up as the appropriate JSON type.
---
---   (This is not the default because other routines may not work well with
---   tables that have a metatable set, for example, Lightroom API calls.)
---
---
--- ENCODING (from a lua table to a JSON string)
---
---   JSON = assert(loadfile "JSON.lua")() -- one-time load of the routines
---
---   local raw_json_text    = JSON:encode(lua_table_or_value)
---   local pretty_json_text = JSON:encode_pretty(lua_table_or_value) -- "pretty printed" version for human readability
---   local custom_pretty    = JSON:encode(lua_table_or_value, etc, { pretty = true, indent = "|  ", align_keys = false })
---
---   On error during encoding, this code calls:
---
---     JSON:onEncodeError(message, etc)
---
---   which you can override in your local JSON object.
---
---   The 'etc' in the error call is the second argument to encode()
---   and encode_pretty(), or nil if it wasn't provided.
---
---
--- PRETTY-PRINTING
---
---   An optional third argument, a table of options, allows a bit of
---   configuration about how the encoding takes place:
---
---     pretty = JSON:encode(val, etc, {
---                                       pretty = true,      -- if false, no other options matter
---                                       indent = "   ",     -- this provides for a three-space indent per nesting level
---                                       align_keys = false, -- see below
---                                     })
---
---   encode() and encode_pretty() are identical except that encode_pretty()
---   provides a default options table if none given in the call:
---
---       { pretty = true, align_keys = false, indent = "  " }
---
---   For example, if
---
---      JSON:encode(data)
---
---   produces:
---
---      {"city":"Kyoto","climate":{"avg_temp":16,"humidity":"high","snowfall":"minimal"},"country":"Japan","wards":11}
---
---   then
---
---      JSON:encode_pretty(data)
---
---   produces:
---
---      {
---        "city": "Kyoto",
---        "climate": {
---          "avg_temp": 16,
---          "humidity": "high",
---          "snowfall": "minimal"
---        },
---        "country": "Japan",
---        "wards": 11
---      }
---
---   The following three lines return identical results:
---       JSON:encode_pretty(data)
---       JSON:encode_pretty(data, nil, { pretty = true, align_keys = false, indent = "  " })
---       JSON:encode       (data, nil, { pretty = true, align_keys = false, indent = "  " })
---
---   An example of setting your own indent string:
---
---     JSON:encode_pretty(data, nil, { pretty = true, indent = "|    " })
---
---   produces:
---
---      {
---      |    "city": "Kyoto",
---      |    "climate": {
---      |    |    "avg_temp": 16,
---      |    |    "humidity": "high",
---      |    |    "snowfall": "minimal"
---      |    },
---      |    "country": "Japan",
---      |    "wards": 11
---      }
---
---   An example of setting align_keys to true:
---
---     JSON:encode_pretty(data, nil, { pretty = true, indent = "  ", align_keys = true })
---
---   produces:
---
---      {
---           "city": "Kyoto",
---        "climate": {
---                     "avg_temp": 16,
---                     "humidity": "high",
---                     "snowfall": "minimal"
---                   },
---        "country": "Japan",
---          "wards": 11
---      }
---
---   which I must admit is kinda ugly, sorry. This was the default for
---   encode_pretty() prior to version 20141223.14.
---
---
---  AMBIGUOUS SITUATIONS DURING THE ENCODING
---
---   During the encode, if a Lua table being encoded contains both string
---   and numeric keys, it fits neither JSON's idea of an object, nor its
---   idea of an array. To get around this, when any string key exists (or
---   when non-positive numeric keys exist), numeric keys are converted to
---   strings.
---
---   For example,
---     JSON:encode({ "one", "two", "three", SOMESTRING = "some string" }))
---   produces the JSON object
---     {"1":"one","2":"two","3":"three","SOMESTRING":"some string"}
---
---   To prohibit this conversion and instead make it an error condition, set
---      JSON.noKeyConversion = true
---
-
-
-
-
---
--- SUMMARY OF METHODS YOU CAN OVERRIDE IN YOUR LOCAL LUA JSON OBJECT
---
---    assert
---    onDecodeError
---    onDecodeOfNilError
---    onDecodeOfHTMLError
---    onEncodeError
---
---  If you want to create a separate Lua JSON object with its own error handlers,
---  you can reload JSON.lua or use the :new() method.
---
----------------------------------------------------------------------------
 
 local default_pretty_indent  = "  "
 local default_pretty_options = { pretty = true, align_keys = false, indent = default_pretty_indent }
