@@ -81,14 +81,15 @@ local syswHandler = process.this:spawnThread(function()
     if handlers[data[1]] then
       for k, v in pairs(handlers[data[1]]) do
         if v.handlerFunc then 
-          v.handlerFunc(unpack(data))
+          print(pcall(v.handlerFunc, unpack(data)))
         elseif v.handler then
-          loadfile(v.handler)(unpack(data))
+          pcall(loadfile(v.handler), unpack(data))
         end
       end
     end
   end
 end, 'sysw-handler')
+
 _G.sysw = {}
 
 function sysw.exit()
@@ -106,11 +107,8 @@ function sysw.patch()
   dofile(fs.combine(_G.params.root, '/lib/libk.lua'))
   modules.reloadAllModules()
 end
-
-sysw.registerHandler('start-shell', function()
-  error()
-end)
-
+term.clear()
+term.setCursorPos(1,1)
 process.this:update()
 process.this:update('init')
 
