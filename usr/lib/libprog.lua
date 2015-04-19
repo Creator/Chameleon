@@ -72,10 +72,8 @@ function daemon_mt:addEvent(ev, fn)
       }
     }
   elseif not self.events[ev] then
-    self.events = {
-      [ev] = {
-        fn
-      }
+    self.events[ev] = {
+      fn
     }
   else
     table.insert(self.events[ev], fn)
@@ -91,8 +89,8 @@ function daemon_mt:getFunction()
     local args = {...}
     for k, v in pairs(evs) do
       if args[1] == k then
-        for k, v in pairs(v) do
-          v()
+        for e, d in pairs(v) do
+          pcall(d, ...)
         end
       end
     end
@@ -102,7 +100,9 @@ end
 daemon_mt.__index = daemon_mt
 
 function program.daemonize()
-  local _prog = {}
+  local _prog = {
+    ["events"] = {}
+  }
   setmetatable(_prog, daemon_mt)
   return _prog
 end

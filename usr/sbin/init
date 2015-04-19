@@ -80,7 +80,7 @@ if not process.this then
   process.this = process.main:spawnSubprocess('/usr/sbin/init')
 end
 
-if cfg['initProgram'] then
+if cfg and cfg.initProgram then
   initThread = process.this:spawnThread(loadfile(cfg['initProgram']), 'mainProgram')
 else
   initThread = process.this:spawnThread(loadfile('/rom/programs/lua'), 'mainProgram')
@@ -99,6 +99,16 @@ do
           v
         }
       end
+    elseif v.events then
+      for e, d in pairs(v.events) do
+        if handlers and handlers[d] then
+          table.insert(handlers[d], v)
+        else
+          handlers[d] = {
+            v
+          }
+        end
+      end
     end
   end
 end
@@ -111,7 +121,11 @@ local syswHandler = process.this:spawnThread(function()
         if v.handlerFunc then
           pcall(v.handlerFunc, unpack(data))
         elseif v.handler then
-          loadfile(v.handler)(unpack(data))
+          sexec(v.handler, unpack(data))
+        elseif v.handlers then
+          for e, d in pairs(v.handlers) do
+            sexec(d, unpack(data))
+          end
         end
       end
     end end)
