@@ -22,45 +22,14 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 ]]
+
 local args = {...}
-if not _G.devices then
-	_G.devices = {}
-end
+local pfsobj = loadfile('/usr/lib/libpfs.lua')()
 
-if fs.exists('/usr/dev') then
-	fs.delete('/usr/dev')
-end
-
-if args[1] == 'peripheral' then
-	local x = fs.open(('/usr/dev/%s/%s'):format(peripheral.getType(args[2]), args[2]), 'w')
-	x.writeLine('')
-	x.close()
-	if not _G.devices[args[2]] then
-			_G.devices[args[2]] = {peripheral.wrap(args[2])}
-		else
-			table.insert(_G.devices[args[2]], peripheral.wrap(args[2]))
-		end
-
-		if peripheral.getType(args[2]) == 'modem' then
-			if not rednet.isOpen() then
-				rednet.open(args[2])
-			end
-		end
+if args[1] == 'exec' then
+  pcall(pfsobj:new(args).writeAll, pfsobj:new(args), '/')
 elseif args[1] == 'init' then
-	for k, v in pairs(peripheral.getNames()) do
-		local x = fs.open(('/usr/dev/%s/%s'):format(peripheral.getType(v), v), 'w')
-		x.writeLine('')
-		x.close()
-		if not _G.devices[peripheral.getType(v)] then
-			_G.devices[peripheral.getType(v)] = {peripheral.wrap(v)}
-		else
-			table.insert(_G.devices[peripheral.getType(v)], peripheral.wrap(v))
-		end
-
-		if peripheral.getType(v) == 'modem' then
-			if not rednet.isOpen() then
-				rednet.open(v)
-			end
-		end
-	end
+  if fs.exists('/usr/proc') then
+    fs.delete('/usr/proc')
+  end
 end

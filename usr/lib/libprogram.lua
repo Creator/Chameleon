@@ -22,45 +22,41 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 ]]
-local args = {...}
-if not _G.devices then
-	_G.devices = {}
+local program = {}
+
+local program_mt = {}
+
+function program_mt:add(func)
+  if not self.proc then
+    self.proc = (getfenv(2).process.this and getfenv(2).process.this or process.main):spawnSubprocess(getRandomTardixID())
+  end
+
+  self.proc:spawnThread(func, getRandomTardixID())
 end
 
-if fs.exists('/usr/dev') then
-	fs.delete('/usr/dev')
+function program_mt:start()
+  if not self.proc then error('You need to add some functions first!',2) end
+  while true do
+    local data = {coroutine.yield()}
+    if data[1] == 'terminate' then
+      break
+    end
+
+    self.proc:update(unpack(data))
+  end
 end
 
-if args[1] == 'peripheral' then
-	local x = fs.open(('/usr/dev/%s/%s'):format(peripheral.getType(args[2]), args[2]), 'w')
-	x.writeLine('')
-	x.close()
-	if not _G.devices[args[2]] then
-			_G.devices[args[2]] = {peripheral.wrap(args[2])}
-		else
-			table.insert(_G.devices[args[2]], peripheral.wrap(args[2]))
-		end
+function program.start(func1, ...)
+  local _prog = {}
+  setmetatable(_prog, program_mt)
 
-		if peripheral.getType(args[2]) == 'modem' then
-			if not rednet.isOpen() then
-				rednet.open(args[2])
-			end
-		end
-elseif args[1] == 'init' then
-	for k, v in pairs(peripheral.getNames()) do
-		local x = fs.open(('/usr/dev/%s/%s'):format(peripheral.getType(v), v), 'w')
-		x.writeLine('')
-		x.close()
-		if not _G.devices[peripheral.getType(v)] then
-			_G.devices[peripheral.getType(v)] = {peripheral.wrap(v)}
-		else
-			table.insert(_G.devices[peripheral.getType(v)], peripheral.wrap(v))
-		end
+  _prog:add(func1)
+  for k, v in pairs({...})
+    _prog:add(v)
+  end
 
-		if peripheral.getType(v) == 'modem' then
-			if not rednet.isOpen() then
-				rednet.open(v)
-			end
-		end
-	end
+  _prog:start()
+  return _prog
 end
+
+return program

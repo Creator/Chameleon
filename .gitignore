@@ -9,3 +9,6 @@ tmp/
 dev/**
 dev
 dev/
+usr/dev/
+usr/proc/
+proc/
