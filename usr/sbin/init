@@ -105,7 +105,7 @@ end
 
 local syswHandler = process.this:spawnThread(function()
   while true do
-    pcall(function() local data = {coroutine.yield()}
+    local ok, err =  pcall(function() local data = {coroutine.yield()}
     if handlers[data[1]] then
       for k, v in pairs(handlers[data[1]]) do
         if v.handlerFunc then
@@ -115,6 +115,10 @@ local syswHandler = process.this:spawnThread(function()
         end
       end
     end end)
+
+    if not ok then
+      print(err)
+    end
   end
 end, 'sysw-handler')
 
