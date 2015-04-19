@@ -46,16 +46,64 @@ function program_mt:start()
   end
 end
 
+program_mt.__index = program_mt
+
 function program.start(func1, ...)
   local _prog = {}
   setmetatable(_prog, program_mt)
 
   _prog:add(func1)
-  for k, v in pairs({...})
+  for k, v in pairs({...}) do
     _prog:add(v)
   end
 
   _prog:start()
+  return _prog
+end
+
+
+local daemon_mt = {}
+
+function daemon_mt:addEvent(ev, fn)
+  if not self.events then
+    self.events = {
+      [ev] = {
+        fn
+      }
+    }
+  elseif not self.events[ev] then
+    self.events = {
+      [ev] = {
+        fn
+      }
+    }
+  else
+    table.insert(self.events[ev], fn)
+  end
+
+  return self
+end
+
+function daemon_mt:getFunction()
+  local evs = self.events
+
+  return function(...)
+    local args = {...}
+    for k, v in pairs(evs) do
+      if args[1] == k then
+        for k, v in pairs(v) do
+          v()
+        end
+      end
+    end
+  end
+end
+
+daemon_mt.__index = daemon_mt
+
+function program.daemonize()
+  local _prog = {}
+  setmetatable(_prog, daemon_mt)
   return _prog
 end
 
