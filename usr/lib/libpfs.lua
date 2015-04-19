@@ -23,14 +23,15 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 ]]
 local ProcfsObject = class(function(self, data)
-  self.proc     = data[4]
-  self.name     = self.proc.name or ''
-  self.tid      = self.proc.tid
-  self.children = self.proc.children or {}
+  self.starttime = os.clock()
+  self.proc      = (data[4] and data[4] or (getfenv(2).process.this or {}))
+  self.name      = self.proc.name or ''
+  self.tid       = self.proc.tid
+  self.children  = self.proc.children or {}
 
-  self.cmdline  = data[3] or ''
-  self.file     = data[2] or ''
-  self.where    = ('/usr/proc/%s/'):format(self.tid:sub(-4))
+  self.cmdline   = data[3] or ''
+  self.file      = data[2] or ''
+  self.where     = ('/usr/proc/%s/'):format(self.tid:sub(-4))
 end)
 
 function ProcfsObject:writeProperty(file, prop)
@@ -52,10 +53,9 @@ end
 
 function ProcfsObject:writeAll(dir)
   self:writeProperty(fs.combine(dir or '', 'process_tid'),          self.tid      )
-  self:writeProperty(fs.combine(dir or '', 'process_childcount'),   #self.children)
   self:writeProperty(fs.combine(dir or '', 'process_cmdline'),      self.cmdline  )
   self:writeProperty(fs.combine(dir or '', 'process_source'),       self.file     )
-
+  self:writeProperty(fs.combine(dir or '', 'process_timest'),       self.starttime)
   for k, v in pairs(self.children) do
     if v.type and v:type() == 'process' then
       ProcfsObject(v):writeAll(v.tid)

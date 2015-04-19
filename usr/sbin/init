@@ -26,7 +26,7 @@ THE SOFTWARE.
 term.clear()
 term.setCursorPos(1,1)
 
-logf('Starting sysw-intree from %s', _FILE or 'not executed with execl... :M')
+logf('Starting sysw-intree from %s', _FILE or 'not executed with exec... :M')
 local _sysw_dir = fs.getDir(_FILE or '/')
 
 local cfg = {}
@@ -105,16 +105,16 @@ end
 
 local syswHandler = process.this:spawnThread(function()
   while true do
-    local data = {coroutine.yield()}
+    pcall(function() local data = {coroutine.yield()}
     if handlers[data[1]] then
       for k, v in pairs(handlers[data[1]]) do
         if v.handlerFunc then
-          print(pcall(v.handlerFunc, unpack(data)))
+          pcall(v.handlerFunc, unpack(data))
         elseif v.handler then
-          pcall(loadfile(v.handler), unpack(data))
+          loadfile(v.handler)(unpack(data))
         end
       end
-    end
+    end end)
   end
 end, 'sysw-handler')
 

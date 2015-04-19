@@ -27,13 +27,9 @@ if not _G.devices then
 	_G.devices = {}
 end
 
-if fs.exists('/usr/dev') then
-	fs.delete('/usr/dev')
-end
-
 if args[1] == 'peripheral' then
 	local x = fs.open(('/usr/dev/%s/%s'):format(peripheral.getType(args[2]), args[2]), 'w')
-	x.writeLine('')
+	x.writeLine(('Connected at %d.'):format(os.clock()))
 	x.close()
 	if not _G.devices[args[2]] then
 			_G.devices[args[2]] = {peripheral.wrap(args[2])}
@@ -47,9 +43,12 @@ if args[1] == 'peripheral' then
 			end
 		end
 elseif args[1] == 'init' then
+	if fs.exists('/usr/dev') then
+		fs.delete('/usr/dev')
+	end
 	for k, v in pairs(peripheral.getNames()) do
 		local x = fs.open(('/usr/dev/%s/%s'):format(peripheral.getType(v), v), 'w')
-		x.writeLine('')
+		x.writeLine(('Connected at %d.'):format(os.clock()))
 		x.close()
 		if not _G.devices[peripheral.getType(v)] then
 			_G.devices[peripheral.getType(v)] = {peripheral.wrap(v)}
@@ -63,4 +62,6 @@ elseif args[1] == 'init' then
 			end
 		end
 	end
+elseif args[1] == 'peripheral_detach' then
+
 end
