@@ -34,8 +34,42 @@ function program_mt:add(func)
   self.proc:spawnThread(func, getRandomTardixID())
 end
 
+function program_mt:addEvent(ev, func)
+  if not self.canEvents and not self.events then
+    self.canEvents = true
+    self.events = {
+      [ev] = {
+        func
+      }
+    }
+    local evs = self.events
+    self.proc:spawnThread(function()
+      while true do
+        local data = {coroutine.yield()}
+        for k, v in pairs(evs) do
+          if args[1] == k then
+            for e, d in pairs(v) do
+              pcall(d, unpack(data))
+            end
+          end
+        end
+      end
+    end)
+  elseif self.canEvents and not self.events then
+    self.events = {
+      [ev] = {func}
+    }
+  elseif self.canEvents and self.events and not self.events[ev] then
+    self.events[ev] = {
+
+    }
+  else
+    table.insert(self.events[ev], func)
+  end
+end
+
 function program_mt:start()
-  if not self.proc then error('You need to add some functions first!',2) end
+  if not self.proc then error('You need to add some functions first!', 2) end
   while true do
     local data = {coroutine.yield()}
     if data[1] == 'terminate' then
@@ -61,6 +95,11 @@ function program.start(func1, ...)
   return _prog
 end
 
+function program.create()
+  local _prog = {}
+  setmetatable(_prog, program_mt)
+  return _prog
+end
 
 local daemon_mt = {}
 
@@ -95,6 +134,10 @@ function daemon_mt:getFunction()
       end
     end
   end
+end
+
+function daemon_mt:run(...)
+  self:getFunction()(...)
 end
 
 daemon_mt.__index = daemon_mt

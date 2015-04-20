@@ -49,4 +49,4 @@ libp.daemonize()
 			end
 		end
 	end)
-	:getFunction()(...)
+	:run(...)
