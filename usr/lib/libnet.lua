@@ -73,7 +73,7 @@ function net.registerInterface(side)
   net.actinf = modem.name
 end
 
--- drop app IPs associated with the interface
+-- drop IPs associated with the interface
 function net.deregisterInterface(side)
   local modem = {}
 
@@ -158,9 +158,9 @@ end
 function net.receive(this, sid, message)
   -- TODO: Parse *only* within the first #<data>#
   -- manipulation
-  local frm = tostring(string.match(data, "from:([0-9.]+),"))
-  local to  = tostring(string.match(data, "to:([0-9.]+),"))
-  local seg = tostring(string.match(data, "seg:([0-9]+),"))
+  local frm = tostring(string.match(message, "from:([0-9.]+),"))
+  local to  = tostring(string.match(message, "to:([0-9.]+),"))
+  local seg = tostring(string.match(message, "seg:([0-9]+),"))
 
   -- define scope
   local pdata = nil
@@ -169,7 +169,7 @@ function net.receive(this, sid, message)
     logn.write("dropping packet from " .. frm .. ": ERRNOTOURS ")
   else
     -- get the data by removing the header
-    pdata = tostring(string.gsub(data, "#.+#", ""))
+    pdata = tostring(string.gsub(message, "#.+#", ""))
 
     logn.write("recieved: ".. pdata .. " from " .. frm)
   end
