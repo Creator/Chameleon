@@ -36,7 +36,7 @@ _G.system = {
 do
   -- parse config file
   if fs.exists('/usr/etc/sysw.conf') then
-    system.config = textutils.unserialize(readfile('/usr/etc/sysw.conf'))
+    _G.system.config = textutils.unserialize(readfile('/usr/etc/sysw.conf'))
   else
     logf('[sysw-intree] failed to load config; can not proceed.')
     error()
@@ -64,13 +64,13 @@ do
       table.dump(v)
       for k1, v1 in pairs(v) do
         table.dump(v1)
-        if not system.config[k1] then system.config[k1] = {} end
+        if not _G.system.config[k1] then _G.system.config[k1] = {} end
         if type(v1) == 'table' then
           for k2, v2 in pairs(v1) do
-            system.config[k1][k2] = v2
+            _G.system.config[k1][k2] = v2
           end
         else
-          system.config[k1] = v1
+          _G.system.config[k1] = v1
         end
       end
     end
@@ -82,8 +82,8 @@ if not process.this then
   process.this = process.main:spawnSubprocess('/usr/sbin/init')
 end
 
-if system.config and system.config.initProgram then
-  initThread = process.this:spawnThread(loadfile(system.config['initProgram']), 'mainProgram')
+if _G.system.config and _G.system.config.initProgram then
+  initThread = process.this:spawnThread(loadfile(_G.system.config['initProgram']), 'mainProgram')
 else
   initThread = process.this:spawnThread(loadfile('/rom/programs/lua'), 'mainProgram')
 end
@@ -92,21 +92,21 @@ initThread:update()
 _G.system.handlers = {};
 
 do
-  for k, v in pairs(system.config) do
+  for k, v in pairs(_G.system.config) do
     if v.event then
-      if handlers and handlers[v.event] then
-        table.insert(handlers[v.event], v)
+      if _G.system.handlers and _G.system.handlers[v.event] then
+        table.insert(_G.system.handlers[v.event], v)
       else
-        handlers[v.event] = {
+        _G.system.handlers[v.event] = {
           v
         }
       end
     elseif v.events then
       for e, d in pairs(v.events) do
-        if handlers and handlers[d] then
-          table.insert(handlers[d], v)
+        if _G.system.handlers and _G.system.handlers[d] then
+          table.insert(_G.system.handlers[d], v)
         else
-          handlers[d] = {
+          _G.system.handlers[d] = {
             v
           }
         end
@@ -145,7 +145,7 @@ function sysw.exit()
 end
 
 function sysw.registerHandler(event, handlerFunc)
-  table.insert(system.config, {
+  table.insert(_G.system.config, {
     ["event"] = event,
     ["handlerFunc"] = handlerFunc
   })
