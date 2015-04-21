@@ -29,12 +29,14 @@ term.setCursorPos(1,1)
 logf('Starting sysw-intree from %s', _FILE or 'not executed with exec... :M')
 local _sysw_dir = fs.getDir(_FILE or '/')
 
-local cfg = {}
+_G.system = {
+  ["config"] = {}
+}
 
 do
   -- parse config file
   if fs.exists('/usr/etc/sysw.conf') then
-    cfg = textutils.unserialize(readfile('/usr/etc/sysw.conf'))
+    system.config = textutils.unserialize(readfile('/usr/etc/sysw.conf'))
   else
     logf('[sysw-intree] failed to load config; can not proceed.')
     error()
@@ -62,13 +64,13 @@ do
       table.dump(v)
       for k1, v1 in pairs(v) do
         table.dump(v1)
-        if not cfg[k1] then cfg[k1] = {} end
+        if not system.config[k1] then system.config[k1] = {} end
         if type(v1) == 'table' then
           for k2, v2 in pairs(v1) do
-            cfg[k1][k2] = v2
+            system.config[k1][k2] = v2
           end
         else
-          cfg[k1] = v1
+          system.config[k1] = v1
         end
       end
     end
@@ -80,17 +82,17 @@ if not process.this then
   process.this = process.main:spawnSubprocess('/usr/sbin/init')
 end
 
-if cfg and cfg.initProgram then
-  initThread = process.this:spawnThread(loadfile(cfg['initProgram']), 'mainProgram')
+if system.config and system.config.initProgram then
+  initThread = process.this:spawnThread(loadfile(system.config['initProgram']), 'mainProgram')
 else
   initThread = process.this:spawnThread(loadfile('/rom/programs/lua'), 'mainProgram')
 end
 initThread:update()
 
-local handlers = {};
+_G.system.handlers = {};
 
 do
-  for k, v in pairs(cfg) do
+  for k, v in pairs(system.config) do
     if v.event then
       if handlers and handlers[v.event] then
         table.insert(handlers[v.event], v)
@@ -143,7 +145,7 @@ function sysw.exit()
 end
 
 function sysw.registerHandler(event, handlerFunc)
-  table.insert(cfg, {
+  table.insert(system.config, {
     ["event"] = event,
     ["handlerFunc"] = handlerFunc
   })
