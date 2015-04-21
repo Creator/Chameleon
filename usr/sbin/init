@@ -29,12 +29,16 @@ term.setCursorPos(1,1)
 logf('Starting sysw-intree from %s', _FILE or 'not executed with exec... :M')
 local _sysw_dir = fs.getDir(_FILE or '/')
 
-local cfg = {}
+local cfg;
 
 do
   -- parse config file
   if fs.exists('/usr/etc/sysw.conf') then
     cfg = textutils.unserialize(readfile('/usr/etc/sysw.conf'))
+    if not cfg then
+      logf('[sysw-intree] syntax error on config file.')
+      error()
+    end
   else
     logf('[sysw-intree] failed to load config; can not proceed.')
     error()
