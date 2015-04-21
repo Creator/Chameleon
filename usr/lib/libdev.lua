@@ -6,7 +6,7 @@ setmetatable(devices, {
   ["__index"] = function(t,k)
     dev.populate()
     return rawget(t,k)
-  end 
+  end
 })
 
 function dev.device(type, name)
@@ -36,11 +36,20 @@ function dev_mt.wrap()
   end
 end
 
+--[[
+  Register a device
+]]
 function dev.register(type, name)
   local obj = dev.device(type, name)
-  local x = fs.open(fs.combine('/usr/dev', dev.name(type, name)), 'w')
-  x.close()
-  devices[dev.name(type, name)] = obj
+  local y = dev.name(type, name)
+
+  -- write the block device
+  local devHandle = fs.open('/usr/dev/' .. y, 'w')
+  devHandle.write(type .. "," .. name)
+  devHandle.close()
+
+  -- write the object
+  devices[y] = obj
 
   return obj
 end
@@ -48,8 +57,12 @@ end
 function dev.unregister(type, name)
   for k, v in pairs(devices) do
     if v.type == type and v.name == name then
-      fs.delete(fs.combine('/usr/dev', dev.name(type, name)))
-      print(fs.exists(fs.combine('/usr/dev', dev.name(type, name))))
+      local y = dev.name(type, name)
+
+      fs.delete('/usr/dev/' .. y)
+      print(fs.exists('/usr/dev/' .. y))
+
+      -- remove the obejct
       table.remove(k)
       break
     end
@@ -67,15 +80,50 @@ function dev.unreg(pren)
 end
 
 function dev.populate()
+  devices = {} -- clear on populate, should reset.
+  
   for k, v in pairs(peripheral.getNames()) do
     local ret = dev.register(peripheral.getType(v), v)
     table.insert(devices, ret)
   end
 end
 
-function dev.get(type, name)
-  return false, 'no matching devices'
+--[[
+  Get a device based on it's side, will return the first device,
+
+  @return {boolean} success, {string} device side
+]]
+function dev.get(type)
+  for k, v in pairs(devices) do
+    if v.type == type then
+      return true, v.name -- name = side
+    end
+  end
+
+  -- we must've gotten nothing, so return nothing
+  return false, 'no matching devices, did you populate the array?'
 end
+
+--[[
+  Get a device based on it's side, will return the first device,
+
+  @return {boolean} success, {string} device side
+]]
+function dev.getAll(type)
+  local o = {}
+  for k, v in pairs(devices) do
+    if v.type == type then
+      table.insert(o, devices[k])
+    end
+  end
+
+  -- we must've gotten nothing, so return nothing
+  return o
+end
+
 dev.list = devices
+
+-- failsafe, populate on loadfile()
+dev.populate()
 
 return dev
