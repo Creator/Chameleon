@@ -120,8 +120,8 @@ end
 local syswHandler = process.this:spawnThread(function()
   while true do
     local ok, err =  pcall(function() local data = {coroutine.yield()}
-    if handlers[data[1]] then
-      for k, v in pairs(handlers[data[1]]) do
+    if _G.system.handlers[data[1]] then
+      for k, v in pairs(_G.system.handlers[data[1]]) do
         if v.handlerFunc then
           pcall(v.handlerFunc, unpack(data))
         elseif v.handler then
