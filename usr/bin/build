@@ -28,7 +28,6 @@ local bs_env = {
 setmetatable(bs_env, {["__index"] = _G})
 
 local builder = {}
-setmetatable(builder, {["__index"] = builder})
 
 function builder:addSource(src)
   if not self.sources then error() end
@@ -41,7 +40,7 @@ function builder:setEntryPoint(out)
   self.entry = out
   return self
 end
-function builder:setExecutable(out)
+function builder:setOutput(out)
   self.output = out
   return self
 end
@@ -59,7 +58,7 @@ function builder:run()
     return
   end
 
-  out:addMainFunction(self.entry)
+  out:addMainFunction(loadfile(self.entry))
 
   if not self.output then
     printError('no output')
@@ -73,7 +72,7 @@ function bs_env.builder()
   local ret = {
     ["sources"] = {}
   }
-  setmetatable(ret, builder)
+  setmetatable(ret, {__index = builder})
   table.insert(bs_env.builders, ret)
   return ret
 end
