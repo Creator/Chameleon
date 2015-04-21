@@ -48,9 +48,6 @@ function dev.register(type, name)
   devHandle.write(type .. "," .. name)
   devHandle.close()
 
-  -- write the object
-  devices[y] = obj
-
   return obj
 end
 
@@ -96,12 +93,12 @@ end
 function dev.get(type)
   for k, v in pairs(devices) do
     if v.type == type then
-      return true, v.name -- name = side
+      return v
     end
   end
 
   -- we must've gotten nothing, so return nothing
-  return false, 'no matching devices, did you populate the array?'
+  return {}
 end
 
 --[[
