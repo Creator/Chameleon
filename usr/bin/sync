@@ -21,8 +21,8 @@ local function get(...)
 
     -- Function to run before starting the download
     start = function()
-      if not silent then print()
-        printf('Synchronizing repository %s/%s(@%s) to '%s'.', args[1], args[2], args[3], args[4])
+      if not silent then
+        print('Synchronizing repository %s/%s(@%s) to '%s'.', args[1], args[2], args[3], args[4])
       end
     end,
 
