@@ -1,4 +1,4 @@
 [submodule "kernelnext"]
 	path = kernelnext
 	url = git@github.com:TARDIX/Kernel
-	branch = next
+	branch = debug-patch
