@@ -33,31 +33,50 @@ local libNp = loadfile('/usr/lib/libprog.lua')()
 
 -- setup object
 local net = {}
+logn = {}
+logn.msg = {}
+
+-- network log, mostly for insight on the proto
+function logn.write(msg)
+  print(msg)
+  table.insert(logn.msg, msg)
+end
+
+-- display log
+function logn.display()
+  for i,v in pairs(logn.msg) do
+    print(v)
+  end
+end
 
 -- use the dev API to get all available modems, then we attempt to register an IP.
 -- inorder to do so, we will need a DHCP server to tell us the available APIs.
 -- however, you can also set a static IP in which the machine will not need
 -- a DHCP server but you will need a subnet connected by a switch.
-function net:registerInterfaces()
+function net.registerInterfaces()
   local modems = libNd.getAll("modem")
 
   for i, v in pairs(modems) do
-    print(v)
+    logn.write(v.pren .. " state changed to UP")
   end
 end
 
 -- drop app IPs associated with the interface
-function net:deregisterInterfaces()
+function net.deregisterInterfaces()
+      local modems = libNd.getAll("modem")
 
+  for i, v in pairs(modems) do
+    logn.write(v.pren .. " state changed to DOWN")
+  end
 end
 
 -- attempt to get an IP from a DHCP server.
-function net:dhcpAssoc()
+function net.dhcpAssoc()
 
 end
 
 -- attempt to unassociate from an IP from a DHCP server
-function net:dhcpUnAssoc()
+function net.dhcpUnAssoc()
 
 end
 

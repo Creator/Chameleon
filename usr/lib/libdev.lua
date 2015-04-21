@@ -48,9 +48,6 @@ function dev.register(type, name)
   devHandle.write(type .. "," .. name)
   devHandle.close()
 
-  -- write the object
-  devices[y] = obj
-
   return obj
 end
 
