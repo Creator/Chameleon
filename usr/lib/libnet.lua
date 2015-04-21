@@ -22,7 +22,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 
-Base off of the RFC793 standards, made for the TARDIX Team.
+Based off of the RFC793 standards, made by the TARDIX Team.
 
 Author: Jared Allard <rainbowdashdc@pony.so>
 ]]
@@ -124,11 +124,11 @@ function net.d(this)
     local seg = tostring(string.match(data, "seg:([0-9]+),"))
 
     if to ~= this.ip then
-      logn.write("packet is not to us, drop")
+      logn.write("dropping packet from " .. frm .. " ERRNOTOURS ")
       return
     end
 
-    logn.write("packet is to us")
+    logn.write("recieved: ".. data .. " from " .. frm)
 
     -- get the data by removing the header
     local data = tostring(string.gsub(data, "#.+#", ""))

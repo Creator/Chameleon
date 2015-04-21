@@ -164,7 +164,7 @@ process.this:update('init')
 while true do
   local data = {coroutine.yield()}
   if data[1] == 'terminate' then
-    error()
+    error("init terminated")
   end
   local ret = process.this:update(unpack(data))
 end
