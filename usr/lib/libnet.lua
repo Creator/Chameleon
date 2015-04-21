@@ -58,16 +58,32 @@ end
 -- inorder to do so, we will need a DHCP server to tell us the available APIs.
 -- however, you can also set a static IP in which the machine will not need
 -- a DHCP server but you will need a subnet connected by a switch.
-function net.registerInterface()
-  local modem = libNd.get("modem")
+function net.registerInterface(side)
+  local modem = {}
+
+  if side == nil then
+    modem = libNd.get("modem")
+  else
+    -- TODO: check if modem exists.
+    modem.name = side
+  end
+
   logn.write(modem.name .. " state changed to UP")
   rednet.open(modem.name)
   net.actinf = modem.name
 end
 
 -- drop app IPs associated with the interface
-function net.deregisterInterface()
-  local modem = libNd.get("modem")
+function net.deregisterInterface(side)
+  local modem = {}
+
+  if side == nil then
+    modem = libNd.get("modem")
+  else
+    -- TODO: check if modem exists.
+    modem.name = side
+  end
+
   logn.write(modem.name .. " state changed to DOWN")
   rednet.close(modem.name)
 end
@@ -83,11 +99,11 @@ end
     This is TCP, thus we *will* wait for a response.
 ]]
 function net.send(this, ip, msg)
-  -- check if we we're called correctly
-  if tostring(this.ip) == nil then
+  if type(this) ~= "table" then
     error("not called correctly, use :")
     return false
   end
+
 
   local header = "#to:".. tostring(ip) ..",from:".. tostring(this.ip) ..",seg:0,#"
   local body = base64.encode(tostring(msg))
@@ -105,9 +121,19 @@ function net.send(this, ip, msg)
   rednet.broadcast(packet)
 end
 
+--[[
+  Wait for packets, when we receive one; attempt to parse it.
+
+  If it's out packet, we'll then parse the data!
+]]
 function net.d(this)
   if net.actinf == nil then
     error("no active interface")
+    return false
+  end
+
+  if type(this) ~= "table" then
+    error("not called correctly, use :")
     return false
   end
 
@@ -115,29 +141,40 @@ function net.d(this)
   while true do
     id, data = rednet.receive()
 
-
-    -- TODO: Parse *only* within the first #<data>#
-
-    -- manipulation
-    local frm = tostring(string.match(data, "from:([0-9.]+),"))
-    local to  = tostring(string.match(data, "to:([0-9.]+),"))
-    local seg = tostring(string.match(data, "seg:([0-9]+),"))
-
-    if to ~= this.ip then
-      logn.write("dropping packet from " .. frm .. " ERRNOTOURS ")
-      return
-    end
-
-    logn.write("recieved: ".. data .. " from " .. frm)
-
-    -- get the data by removing the header
-    local data = tostring(string.gsub(data, "#.+#", ""))
+    this:receive(id, data)
   end
 end
 
 function net.qD(this)
+  if type(this) ~= "table" then
+    error("not called correctly, use :")
+    return false
+  end
+
   this.registerInterface()
   this:d()
+end
+
+function net.receive(this, sid, message)
+  -- TODO: Parse *only* within the first #<data>#
+  -- manipulation
+  local frm = tostring(string.match(data, "from:([0-9.]+),"))
+  local to  = tostring(string.match(data, "to:([0-9.]+),"))
+  local seg = tostring(string.match(data, "seg:([0-9]+),"))
+
+  -- define scope
+  local pdata = nil
+
+  if to ~= this.ip then
+    logn.write("dropping packet from " .. frm .. ": ERRNOTOURS ")
+  else
+    -- get the data by removing the header
+    pdata = tostring(string.gsub(data, "#.+#", ""))
+
+    logn.write("recieved: ".. pdata .. " from " .. frm)
+  end
+
+  return pdata;
 end
 
 
