@@ -29,14 +29,12 @@ term.setCursorPos(1,1)
 logf('Starting sysw-intree from %s', _FILE or 'not executed with exec... :M')
 local _sysw_dir = fs.getDir(_FILE or '/')
 
-_G.system = {
-  ["config"] = {}
-}
+local cfg = {}
 
 do
   -- parse config file
   if fs.exists('/usr/etc/sysw.conf') then
-    _G.system.config = textutils.unserialize(readfile('/usr/etc/sysw.conf'))
+    cfg = textutils.unserialize(readfile('/usr/etc/sysw.conf'))
   else
     logf('[sysw-intree] failed to load config; can not proceed.')
     error()
@@ -64,13 +62,13 @@ do
       table.dump(v)
       for k1, v1 in pairs(v) do
         table.dump(v1)
-        if not _G.system.config[k1] then _G.system.config[k1] = {} end
+        if not cfg[k1] then cfg[k1] = {} end
         if type(v1) == 'table' then
           for k2, v2 in pairs(v1) do
-            _G.system.config[k1][k2] = v2
+            cfg[k1][k2] = v2
           end
         else
-          _G.system.config[k1] = v1
+          cfg[k1] = v1
         end
       end
     end
@@ -82,35 +80,33 @@ if not process.this then
   process.this = process.main:spawnSubprocess('/usr/sbin/init')
 end
 
-if _G.system.config and _G.system.config.initProgram then
-  initThread = process.this:spawnThread(loadfile(_G.system.config['initProgram']), 'mainProgram')
+if cfg and cfg.initProgram then
+  initThread = process.this:spawnThread(loadfile(cfg['initProgram']), 'mainProgram')
 else
   initThread = process.this:spawnThread(loadfile('/rom/programs/lua'), 'mainProgram')
 end
 initThread:update()
 
-_G.system.handlers = {};
+local handlers = {};
 
 do
-  if _G.system and _G.system.config then
-    for k, v in pairs(_G.system.config) do
-      if v.event then
-        if _G.system.handlers and _G.system.handlers[v.event] then
-          table.insert(_G.system.handlers[v.event], v)
+  for k, v in pairs(cfg) do
+    if v.event then
+      if handlers and handlers[v.event] then
+        table.insert(handlers[v.event], v)
+      else
+        handlers[v.event] = {
+          v
+        }
+      end
+    elseif v.events then
+      for e, d in pairs(v.events) do
+        if handlers and handlers[d] then
+          table.insert(handlers[d], v)
         else
-          _G.system.handlers[v.event] = {
+          handlers[d] = {
             v
           }
-        end
-      elseif v.events then
-        for e, d in pairs(v.events) do
-          if _G.system.handlers and _G.system.handlers[d] then
-            table.insert(_G.system.handlers[d], v)
-          else
-            _G.system.handlers[d] = {
-              v
-            }
-          end
         end
       end
     end
@@ -120,8 +116,8 @@ end
 local syswHandler = process.this:spawnThread(function()
   while true do
     local ok, err =  pcall(function() local data = {coroutine.yield()}
-    if _G.system.handlers[data[1]] then
-      for k, v in pairs(_G.system.handlers[data[1]]) do
+    if handlers[data[1]] then
+      for k, v in pairs(handlers[data[1]]) do
         if v.handlerFunc then
           pcall(v.handlerFunc, unpack(data))
         elseif v.handler then
@@ -147,7 +143,7 @@ function sysw.exit()
 end
 
 function sysw.registerHandler(event, handlerFunc)
-  table.insert(_G.system.config, {
+  table.insert(cfg, {
     ["event"] = event,
     ["handlerFunc"] = handlerFunc
   })
