@@ -92,23 +92,25 @@ initThread:update()
 _G.system.handlers = {};
 
 do
-  for k, v in pairs(_G.system.config) do
-    if v.event then
-      if _G.system.handlers and _G.system.handlers[v.event] then
-        table.insert(_G.system.handlers[v.event], v)
-      else
-        _G.system.handlers[v.event] = {
-          v
-        }
-      end
-    elseif v.events then
-      for e, d in pairs(v.events) do
-        if _G.system.handlers and _G.system.handlers[d] then
-          table.insert(_G.system.handlers[d], v)
+  if _G.system and _G.system.config then
+    for k, v in pairs(_G.system.config) do
+      if v.event then
+        if _G.system.handlers and _G.system.handlers[v.event] then
+          table.insert(_G.system.handlers[v.event], v)
         else
-          _G.system.handlers[d] = {
+          _G.system.handlers[v.event] = {
             v
           }
+        end
+      elseif v.events then
+        for e, d in pairs(v.events) do
+          if _G.system.handlers and _G.system.handlers[d] then
+            table.insert(_G.system.handlers[d], v)
+          else
+            _G.system.handlers[d] = {
+              v
+            }
+          end
         end
       end
     end
