@@ -1,0 +1,8 @@
+local libchsh = loadfile('/usr/lib/libchsh.lua')()
+local tArgs = {...}
+
+if #tArgs ~= 1 then
+  print('Usage: cd <path>')
+else
+  libchsh.changeDir(tArgs[1])
+end
