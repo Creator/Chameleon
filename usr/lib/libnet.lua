@@ -68,13 +68,17 @@ function net.registerInterface(side)
     modem.name = side
   end
 
+  if modem == false then
+    return false
+  end
+
   logn.write(modem.name .. " state changed to UP")
   rednet.open(modem.name)
   net.actinf = modem.name
 end
 
 -- drop IPs associated with the interface
-function net.deregisterInterface(side)
+function net.deregisterInterface(side, detached)
   local modem = {}
 
   if side == nil then
@@ -85,7 +89,10 @@ function net.deregisterInterface(side)
   end
 
   logn.write(modem.name .. " state changed to DOWN")
-  rednet.close(modem.name)
+
+  if detached ~= false then
+    rednet.close(modem.name)
+  end
 end
 
 -- attempt to get an IP from a DHCP server.

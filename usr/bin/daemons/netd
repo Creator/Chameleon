@@ -28,8 +28,28 @@ libnet = require('libnet')
 
 libp.daemonize()
 	:addEvent('init', function()
-    libnet.registerInterface()
-    logn.write("libnet started (netd)")
+    if libnet.registerInterface() == false then
+			logn.write("netd disabled, no interfaces")
+		else
+    	logn.write("libnet started (netd)")
+		end
+	end)
+	:addEvent('peripheral', function(ev, sid)
+		local dev = peripheral.getType(sid)
+
+		-- check if the new device was a modem or not.
+		if dev == "modem" then
+			libnet.registerInterface(sid)
+		end
+	end)
+	:addEvent('peripheral_detach', function(ev, sid)
+		local dev = peripheral.getType(sid)
+
+		-- hack to determine if it's a modem or not
+		if fs.exists("/usr/dev/mod-"..sid) then
+			fs.delete("/usr/dev/mod-"..sid)
+			libnet.deregisterInterface(sid)
+		end
 	end)
 	:addEvent('rednet_message', function(ev, sid, msg)
     logn.write("netd => libnet:receive (event)")
