@@ -22,26 +22,44 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 
-Network controller, set DHCP, statics, etc all right here!
+Switchd, for libnet. (fork of netd)
 
-Maintainer: Jared Allard <rainbowdashdc@pony.so>
+Author: Jared Allard <rainbowdashdc@pony.so>
 ]]
 
-local version = "1.0-alpha"
-
+local libp = require("libprog")
 local libnet = _G.libnet
-local Args = {...}
 
--- setup the interfaces (make sure)
-libnet.registerInterface()
+libp.daemonize()
+	:addEvent('init', function()
+    if libnet:registerInterface() == false then
+			logn.write("netd disabled, no interfaces")
+		else
+    	logn.write("libnet started (netd)")
+		end
+	end)
+	:addEvent('peripheral', function(ev, sid)
+		local dev = peripheral.getType(sid)
 
-if Args[1] == "set" then
-  if Args[2] == "ip" then
-    if Args[3] ~= nil then
-      logn.write("ip: "..tostring(Args[3]))
-      libnet.ip = Args[3]
-    end
-  end
-elseif Args[1] == "-v" then
-  print(version)
-end
+		-- check if the new device was a modem or not.
+		if dev == "modem" then
+			libnet:registerInterface(sid)
+		end
+	end)
+	:addEvent('peripheral_detach', function(ev, sid)
+		local dev = peripheral.getType(sid)
+
+		-- hack to determine if it's a modem or not
+		if fs.exists("/usr/dev/mod-"..sid) then
+			fs.delete("/usr/dev/mod-"..sid)
+			libnet.deregisterInterface(sid)
+		end
+	end)
+	:addEvent('rednet_message', function(ev, sid, msg)
+    logn.write("netd => libnet:receive (event)")
+    libnet.handoff(libnet, sid, msg)
+	end)
+	:addEvent('cleanup', function()
+    logn.write("libnet stopped")
+	end)
+	:run(...)

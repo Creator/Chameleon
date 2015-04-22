@@ -23,12 +23,12 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 ]]
 
-local libp = loadfile("/usr/lib/libprog.lua")()
-libnet = require('libnet')
+local libp = require("libprog")
+local libnet = _G.libnet
 
 libp.daemonize()
 	:addEvent('init', function()
-    if libnet.registerInterface() == false then
+    if libnet:registerInterface() == false then
 			logn.write("netd disabled, no interfaces")
 		else
     	logn.write("libnet started (netd)")
@@ -39,7 +39,7 @@ libp.daemonize()
 
 		-- check if the new device was a modem or not.
 		if dev == "modem" then
-			libnet.registerInterface(sid)
+			libnet:registerInterface(sid)
 		end
 	end)
 	:addEvent('peripheral_detach', function(ev, sid)
@@ -52,7 +52,11 @@ libp.daemonize()
 		end
 	end)
 	:addEvent('rednet_message', function(ev, sid, msg)
-    logn.write("netd => libnet:receive (event)")
+    logn.write("netd [rednet] => libnet:receive (event)")
+    libnet.receive(libnet, sid, msg)
+	end)
+	:addEvent('modem_message', function(ev, sid, sendChannel, replyChannel, msg, distance)
+    logn.write("netd [modem] => libnet:receive (event)")
     libnet.receive(libnet, sid, msg)
 	end)
 	:addEvent('cleanup', function()

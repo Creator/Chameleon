@@ -158,6 +158,9 @@ function sysw.patch()
   modules.reloadAllModules()
 end
 
+-- temporary
+_G.libnet = require('libnet')
+
 process.this:update()
 process.this:update('init')
 

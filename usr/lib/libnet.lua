@@ -24,12 +24,19 @@ THE SOFTWARE.
 
 Based off of the RFC793 standards, made by the TARDIX Team.
 
+TODO:
+* Finalize the other OSI layers
+* Error checking
+*
+
 Author: Jared Allard <rainbowdashdc@pony.so>
 ]]
 
 -- needed for the network to function properally
-local libNd = loadfile('/usr/lib/libdev.lua')()
-local libNp = loadfile('/usr/lib/libprog.lua')()
+local libNd = require('libdev')
+local libNp = require('libprog')
+local bit = require('libbit')
+local fcs16 = require('libfcs16') -- for error-checking
 
 
 -- setup object
@@ -37,9 +44,11 @@ local net = {}
 logn = {}
 logn.msg = {}
 
--- placeholder
-net.ip = "192.168.1.1"
-net.actinf = nil
+-- DEPRECATED
+net.ip = nil
+
+-- New system
+net.inf = {}
 
 -- network log, mostly for insight on the proto
 function logn.write(msg)
@@ -58,7 +67,12 @@ end
 -- inorder to do so, we will need a DHCP server to tell us the available APIs.
 -- however, you can also set a static IP in which the machine will not need
 -- a DHCP server but you will need a subnet connected by a switch.
-function net.registerInterface(side)
+function net.registerInterface(this, side)
+  if type(this) ~= "table" then
+    error("not called correctly, use :")
+    return false
+  end
+
   local modem = {}
 
   if side == nil then
@@ -68,13 +82,22 @@ function net.registerInterface(side)
     modem.name = side
   end
 
+  -- something happened, or some interface wasn't setup correctly
   if modem == false then
     return false
   end
 
+  -- interface table
+  -- use null to make sure the entry exists, and is a string
+  this.inf[modem.name] = {}
+  this.inf[modem.name].ip = "null"
+  this.inf[modem.name].gateway = "null"
+  this.inf[modem.name].netmask = "null"
+
+  modem.obj = peripheral.wrap(modem.name)
+  modem.obj.open(65535)
+
   logn.write(modem.name .. " state changed to UP")
-  rednet.open(modem.name)
-  net.actinf = modem.name
 end
 
 -- drop IPs associated with the interface
@@ -95,50 +118,71 @@ function net.deregisterInterface(side, detached)
   end
 end
 
--- attempt to get an IP from a DHCP server.
-function net.dhcpAssoc()
-
-end
-
 --[[
-    Attempt to send data over rednet to the specified IP.
+    Create a packet and broadcast it onto the network
 
-    This is TCP, thus we *will* wait for a response.
+    @param {string} ip - IP to send to
+    @param {string} side - modem location to broadcast over
+    @param {string} msg - string to send
+
+    @return {boolean} success or failure
 ]]
-function net.send(this, ip, msg)
+function net.send(this, ip, side, msg, channel)
   if type(this) ~= "table" then
     error("not called correctly, use :")
     return false
   end
 
+  if channel == nil then
+    -- default "port"
+    channel = 65535
+  end
 
-  local header = "#to:".. tostring(ip) ..",from:".. tostring(this.ip) ..",seg:0,#"
-  local body = base64.encode(tostring(msg))
-
-  local packet = header..body
-
-  if net.actinf == nil then
-    error("no active interface")
+  -- failsafe checks
+  if tostring(this.inf[side]) == nil then
+    error("interface isn't registered")
+    return false
+  elseif this.inf[side].ip == "null" then
+    error("no ip assigned")
     return false
   end
 
+  -- header and body
+  -- body before header, must have correct checksum
+  local body = base64.encode(tostring(msg))
+
+  -- TCP header
+  local header = "#" ..
+    "to:".. tostring(ip) ..
+    ",from:" .. tostring(this.inf[side].ip) ..
+    ",destport:" .. tostring(channel) ..
+    ",sourceport:" .. tostring(channel) ..
+    ",seg:0" ..
+    ",checksum:" .. fcs16.hash(body) ..
+    ",#"
+
+  -- form the packet
+  local packet = header..body
+
+  -- write the newly created packet to stdout
   logn.write(packet)
 
   -- broadcast the data to every machine on the network.
-  rednet.broadcast(packet)
+  local mod = peripheral.wrap(side)
+
+  -- broadcast on the rednet channel
+  logn.write("packet sent over mod.transmit")
+  mod.transmit(65535, 65535, packet)
+
+  return true
 end
 
 --[[
-  Wait for packets, when we receive one; attempt to parse it.
+  Packet reciever, loops over net.receive()
 
-  If it's out packet, we'll then parse the data!
+  @return false on failure
 ]]
 function net.d(this)
-  if net.actinf == nil then
-    error("no active interface")
-    return false
-  end
-
   if type(this) ~= "table" then
     error("not called correctly, use :")
     return false
@@ -152,17 +196,69 @@ function net.d(this)
   end
 end
 
-function net.qD(this)
+
+--[[
+  Attempt to receive data back.
+
+  @return data
+]]
+function net.receive(this, sid, message)
+  -- TODO: Parse *only* within the first #<data>#
+  -- manipulation
+  local frm = tostring(string.match(message, "from:([0-9.]+),"))
+  local to  = tostring(string.match(message, "to:([0-9.]+),"))
+  local seg = tostring(string.match(message, "seg:([0-9]+),"))
+  local destP = tostring(string.match(message, "destport:([0-9]+),"))
+  local srcP = tostring(string.match(message, "sourceport:([0-9]+),"))
+  local checksum = tostring(string.match(message, "checksum:([0-9]+),"))
+
+  -- define scope
+  local pdata = nil
+
+  if tostring(this.inf[sid]) == nil then
+    logv.write("CRIT: got packet, but interface ! exist")
+  elseif to ~= tostring(this.inf[sid].ip) then
+    logn.write("dropping packet from " .. frm .. ": ERRNOTOURS ")
+  else
+    -- get the data by removing the header
+    pdata = tostring(string.gsub(message, "#.+#", ""))
+
+    -- error checking
+    local h = tostring(fcs16.hash(pdata))
+
+    if h ~= checksum then
+      logn.write("packet invalid [INVALIDCHECKSUM]")
+    else
+      logn.write("recieved: ".. pdata .. " from " .. frm)
+    end
+  end
+
+  return pdata;
+end
+
+--[[
+  Get all interfaces currently registered
+
+  @return {object} o - table of interface objects
+]]
+function net.getInterfaces(this)
   if type(this) ~= "table" then
     error("not called correctly, use :")
     return false
   end
 
-  this.registerInterface()
-  this:d()
+  local o = {}
+
+  -- get all registered interfaces
+  for i,v in pairs(this.inf) do
+    table.insert(o, v)
+  end
+
+  -- return the object
+  return o
 end
 
-function net.receive(this, sid, message)
+function net.handoff(this, sid, message)
   -- TODO: Parse *only* within the first #<data>#
   -- manipulation
   local frm = tostring(string.match(message, "from:([0-9.]+),"))
@@ -172,7 +268,10 @@ function net.receive(this, sid, message)
   -- define scope
   local pdata = nil
 
-  if to ~= this.ip then
+  -- safe gaurd
+  if tostring(this.inf[sid]) == nil then
+    logv.write("CRIT: got packet, but interface ! exist")
+  elseif to ~= tostring(this.inf[sid].ip) then
     logn.write("dropping packet from " .. frm .. ": ERRNOTOURS ")
   else
     -- get the data by removing the header
@@ -182,12 +281,6 @@ function net.receive(this, sid, message)
   end
 
   return pdata;
-end
-
-
--- attempt to unassociate from an IP from a DHCP server
-function net.dhcpUnAssoc()
-
 end
 
 return net
