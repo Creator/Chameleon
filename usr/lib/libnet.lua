@@ -39,6 +39,8 @@ local bit = require('libbit')
 local fcs16 = require('libfcs16') -- for error-checking
 
 
+local protover = "101"
+
 -- setup object
 local net = {}
 logn = {}
@@ -52,7 +54,11 @@ net.inf = {}
 
 -- network log, mostly for insight on the proto
 function logn.write(msg)
-  print(msg)
+  print("libnet: "..msg)
+  table.insert(logn.msg, msg)
+end
+
+function logn.log(msg)
   table.insert(logn.msg, msg)
 end
 
@@ -69,7 +75,7 @@ end
 -- a DHCP server but you will need a subnet connected by a switch.
 function net.registerInterface(this, side)
   if type(this) ~= "table" then
-    error("not called correctly, use :")
+    print("not called correctly, use :")
     return false
   end
 
@@ -93,6 +99,7 @@ function net.registerInterface(this, side)
   this.inf[modem.name].ip = "null"
   this.inf[modem.name].gateway = "null"
   this.inf[modem.name].netmask = "null"
+  this.inf[modem.name].side = modem.name
 
   modem.obj = peripheral.wrap(modem.name)
   modem.obj.open(65535)
@@ -100,8 +107,52 @@ function net.registerInterface(this, side)
   logn.write(modem.name .. " state changed to UP")
 end
 
+function net.registerInterfaces(this)
+  if type(this) ~= "table" then
+    error("not called correctly, use :")
+    return false
+  end
+
+  -- detect if returned an object or not
+  local f = 0
+
+  for k, v in pairs(devices) do
+    if v.type == "modem" then
+      -- hotlink to the registerInterface. DRY factor.
+      this:registerInterface(v.name)
+      f = 1
+    end
+  end
+
+  if f == 0 then
+    return false
+  end
+end
+
+function net.deregisterInterfaces(this)
+  if type(this) ~= "table" then
+    error("not called correctly, use :")
+    return false
+  end
+
+  -- detect if returned an object or not
+  local f = 0
+
+  for k, v in pairs(devices) do
+    if v.type == "modem" then
+      -- hotlink to the registerInterface. DRY factor.
+      this:deregisterInterface(v.name)
+      f = 1
+    end
+  end
+
+  if f == 0 then
+    return false
+  end
+end
+
 -- drop IPs associated with the interface
-function net.deregisterInterface(side, detached)
+function net.deregisterInterface(this, side, detached)
   local modem = {}
 
   if side == nil then
@@ -111,10 +162,14 @@ function net.deregisterInterface(side, detached)
     modem.name = side
   end
 
+  -- remove the inf object
+  this.inf[modem.name] = nil
+
   logn.write(modem.name .. " state changed to DOWN")
 
   if detached ~= false then
-    rednet.close(modem.name)
+    modem.obj = peripheral.wrap(modem.name)
+    modem.obj.closeAll()
   end
 end
 
@@ -151,27 +206,27 @@ function net.send(this, ip, side, msg, channel)
   -- body before header, must have correct checksum
   local body = base64.encode(tostring(msg))
 
-  -- TCP header
-  local header = "#" ..
-    "to:".. tostring(ip) ..
+  -- START HEADER GEN --
+  local header = "#version:" .. protover ..
+    ",to:" .. tostring(ip) ..
     ",from:" .. tostring(this.inf[side].ip) ..
     ",destport:" .. tostring(channel) ..
     ",sourceport:" .. tostring(channel) ..
     ",seg:0" ..
     ",checksum:" .. fcs16.hash(body) ..
     ",#"
+  -- END HEADER GEN --
 
   -- form the packet
   local packet = header..body
 
-  -- write the newly created packet to stdout
-  logn.write(packet)
+  -- silently log the packet data
+  logn.log(packet)
 
   -- broadcast the data to every machine on the network.
   local mod = peripheral.wrap(side)
 
   -- broadcast on the rednet channel
-  logn.write("packet sent over mod.transmit")
   mod.transmit(65535, 65535, packet)
 
   return true
@@ -258,6 +313,40 @@ function net.getInterfaces(this)
   return o
 end
 
+--[[
+  Forward a packet across interfaces.
+
+  @return nil
+]]
+function net.forward(this, msg, side)
+  -- [-] TODO: Sort out interfaces and broadcast accordingly.
+  -- [x] TODO: regex just the to: field instead of regen.
+  -- [x] TODO: Don't rely on dest.
+
+  local inf = this.inf
+
+  -- sort out each registered interface.
+  for k, v in pairs(inf) do
+    -- TODO: Optimize this to determine if we have another subnet setup.
+    if tostring(v.subnet) ~= "nil" then
+      logn.write("skipping side "..v.side..", ERRHASSUB")
+    else
+      logn.write("forwarding packet over ".. v.side)
+
+      logn.log(v.side..": "..msg)
+
+      local m = peripheral.wrap(v.side)
+      m.open(65535)
+      m.transmit(65535, 65535, msg)
+
+      logn.write("done")
+    end
+  end
+end
+
+--[[
+  Parse packets and determine where they should go without causing net clutter.
+]]
 function net.handoff(this, sid, message)
   -- TODO: Parse *only* within the first #<data>#
   -- manipulation
@@ -267,17 +356,36 @@ function net.handoff(this, sid, message)
 
   -- define scope
   local pdata = nil
+  local isSub = false
+
+  -- Determine if in or out
+  if tostring(this.inf[sid].subnet) == "nil" then
+    logn.write("error: no subnet configured, !PACKET DROPPED!")
+    return false
+  else
+    logn.write("inspecting packet")
+
+    -- currently only works on xxx.xxx.xxx.<dif> subnets, no xxx.xxx.<dif>.xxx
+    local major = string.match(to, "^([0-9]+.[0-9]+.[0-9]+)")
+
+    -- local subip = string.match(to, ".([0-9]+)$")
+    local submj = string.match(this.inf[sid].subnet, "^([0-9]+.[0-9]+.[0-9]+)")
+
+
+    if major == submj then
+      logn.write("packet is on subnet")
+      isSub = true
+    end
+  end
 
   -- safe gaurd
   if tostring(this.inf[sid]) == nil then
     logv.write("CRIT: got packet, but interface ! exist")
-  elseif to ~= tostring(this.inf[sid].ip) then
-    logn.write("dropping packet from " .. frm .. ": ERRNOTOURS ")
+  elseif isSub == true then
+    logn.write("is on local subnet, don't forward")
   else
-    -- get the data by removing the header
-    pdata = tostring(string.gsub(message, "#.+#", ""))
-
-    logn.write("recieved: ".. pdata .. " from " .. frm)
+    logn.write("passing onto this:forward")
+    this:forward(message)
   end
 
   return pdata;

@@ -35,11 +35,27 @@ local Args = {...}
 -- setup the interfaces (make sure)
 libnet.registerInterface()
 
-if Args[1] == "set" then
-  if Args[2] == "ip" then
-    if Args[3] ~= nil then
-      logn.write("ip: "..tostring(Args[3]))
-      libnet.ip = Args[3]
+
+--[[
+  HOWTO:
+
+  invoke: netctl <dev> options
+
+  i.e netctl top set ip 192.168.1.1
+]]
+
+if Args[2] == "set" then
+  if Args[3] == "ip" then
+    if Args[4] ~= nil then
+      libnet.inf[Args[1]].ip = Args[3]
+    else
+      error("no ip provided")
+    end
+  else if Args[3] == "gateway" then
+    if Args[4] ~= nil then
+      libnet.inf[Args[1]].gateway = Args[3]
+    else
+      error("no gateway provided")
     end
   end
 elseif Args[1] == "-v" then

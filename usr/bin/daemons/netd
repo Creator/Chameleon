@@ -28,7 +28,7 @@ local libnet = _G.libnet
 
 libp.daemonize()
 	:addEvent('init', function()
-    if libnet:registerInterface() == false then
+    if libnet:registerInterfaces() == false then
 			logn.write("netd disabled, no interfaces")
 		else
     	logn.write("libnet started (netd)")
@@ -60,6 +60,7 @@ libp.daemonize()
     libnet.receive(libnet, sid, msg)
 	end)
 	:addEvent('cleanup', function()
+		libnet:deregisterInterfaces()
     logn.write("libnet stopped")
 	end)
 	:run(...)

@@ -32,10 +32,10 @@ local libnet = _G.libnet
 
 libp.daemonize()
 	:addEvent('init', function()
-    if libnet:registerInterface() == false then
-			logn.write("netd disabled, no interfaces")
+    if libnet:registerInterfaces() == false then
+			logn.write("switchd disabled, no interfaces")
 		else
-    	logn.write("libnet started (netd)")
+    	logn.write("libnet started (switchd)")
 		end
 	end)
 	:addEvent('peripheral', function(ev, sid)
@@ -52,12 +52,16 @@ libp.daemonize()
 		-- hack to determine if it's a modem or not
 		if fs.exists("/usr/dev/mod-"..sid) then
 			fs.delete("/usr/dev/mod-"..sid)
-			libnet.deregisterInterface(sid)
+			libnet.deregisterInterfaces(sid)
 		end
 	end)
 	:addEvent('rednet_message', function(ev, sid, msg)
-    logn.write("netd => libnet:receive (event)")
+    logn.write("switchd => libnet:receive (event)")
     libnet.handoff(libnet, sid, msg)
+	end)
+	:addEvent('modem_message', function(ev, sid, sendChannel, replyChannel, msg, distance)
+    logn.write("switchd [modem] => libnet:receive (event)")
+		libnet.handoff(libnet, sid, msg)
 	end)
 	:addEvent('cleanup', function()
     logn.write("libnet stopped")
