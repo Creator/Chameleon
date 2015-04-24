@@ -298,12 +298,30 @@ end
   @return data
 ]]
 function net.receive(this, sid, message)
+  -- [x] TODO: implement layer parsing, with fallsafe if corrupt
   -- [ ] TODO: (re)Implement TCP libnet specs.
   -- [ ] TODO: (re)Implement the new IPv4 specs.
   -- [ ] TODO: Implement the new ICMP specs.
 
   -- first we parse the transport layer.
-  print(stack:split(";"))
+  for i,v in pairs(string.split(message, ";")) do
+    -- remove the hash
+    v = string.gsub(v, "#", "")
+    print(v)
+
+    local layer = tostring(string.match(v, "layer:([a-z0-9]+),")
+
+    logn.write("layer protocol is "..layer)
+
+    -- check layer type
+    if layer == "ipv4" then
+      logn.write("layer is supported")
+    elseif layer == "tcp" then
+      logn.write("layer is supported")
+    else
+      logn.write("unknown layer given")
+    end
+  end
 
   -- manipulation
   local frm = tostring(string.match(message, "from:([0-9.]+),"))
