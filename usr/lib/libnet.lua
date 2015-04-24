@@ -225,20 +225,20 @@ function net.send(this, ip, side, msg, channel)
   local body = base64.encode(tostring(msg))
 
   -- [x] TODO: seperate the TCP layer from the IPv4 layer
-  -- [ ] TODO: (re)implement the IPv4 layer
+  -- [x] TODO: (re)implement the IPv4 layer
   -- [ ] TODO: Implement the ICMP layer.
 
   -- TCP Layer
-  local tcp = "#layer:tcp" ..
+  local tcp = "layer:tcp" ..
     ",version:" .. tcpver ..
     ",dest:" .. tostring(channel) ..
     ",source:" .. tostring(channel) ..
     ",seg:0" ..
     ",checksum:" .. fcs16.hash(body) ..
-    ",#"
+    ",;"
 
   -- IPv4 Layer
-  local ipv4 = "#layer:ipv4" ..
+  local ipv4 = "layer:ipv4" ..
     ",version:" .. ipv4ver ..
     ",tl:10000" ..
     ",id:" .. net:genIPv4ID() ..
@@ -249,9 +249,9 @@ function net.send(this, ip, side, msg, channel)
   -- IPv4 checksum
   ipv4 = ipv4 ..
     ",checksum:" .. fcs16.hash(ipv4) ..
-    ",#"
+    ",;"
 
-  local header = tcp .. ipv4
+  local header = "#" .. tcp .. ipv4 .. "#" -- encasp it into the header field,
 
   -- form the packet
   local packet = header..body
@@ -298,7 +298,12 @@ end
   @return data
 ]]
 function net.receive(this, sid, message)
-  -- [ ] TODO: Parse *only* within the first #<data>#
+  -- [ ] TODO: (re)Implement TCP libnet specs.
+  -- [ ] TODO: (re)Implement the new IPv4 specs.
+  -- [ ] TODO: Implement the new ICMP specs.
+
+  -- first we parse the transport layer.
+  print(stack:split(";"))
 
   -- manipulation
   local frm = tostring(string.match(message, "from:([0-9.]+),"))
