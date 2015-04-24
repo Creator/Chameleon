@@ -309,7 +309,7 @@ function net.receive(this, sid, message)
     v = string.gsub(v, "#", "")
     print(v)
 
-    local layer = tostring(string.match(v, "layer:([a-z0-9]+),")
+    local layer = tostring(string.match(v, "layer:([a-z0-9]+),"))
 
     logn.write("layer protocol is "..layer)
 
