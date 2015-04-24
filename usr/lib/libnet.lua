@@ -25,9 +25,16 @@ THE SOFTWARE.
 Based off of the RFC793 standards, made by the TARDIX Team.
 
 TODO:
-* Finalize the other OSI layers
-* Error checking
-*
+
+  * Finalize the other OSI layers
+  * Error checking
+  * UDP/TCP (UDP done)
+
+Coding Style:
+
+  * when you are unsure of a type, always tostring it.
+  * tab = 3 spaces.
+
 
 Author: Jared Allard <rainbowdashdc@pony.so>
 ]]
@@ -38,8 +45,10 @@ local libNp = require('libprog')
 local bit = require('libbit')
 local fcs16 = require('libfcs16') -- for error-checking
 
+-- versions (not in binary)
+local tcpver = "101"
+local ipv4ver = "100"
 
-local protover = "101"
 
 -- setup object
 local net = {}
@@ -200,22 +209,49 @@ function net.send(this, ip, side, msg, channel)
   elseif this.inf[side].ip == "null" then
     error("no ip assigned")
     return false
+  elseif ip == nil then
+    error("ip param missing")
+    return false
+  elseif side == nil then
+    error("inf side param missing")
+    return false
+  elseif msg == nil then
+    error("msg param missing")
+    return false
   end
 
   -- header and body
   -- body before header, must have correct checksum
   local body = base64.encode(tostring(msg))
 
-  -- START HEADER GEN --
-  local header = "#version:" .. protover ..
-    ",to:" .. tostring(ip) ..
-    ",from:" .. tostring(this.inf[side].ip) ..
-    ",destport:" .. tostring(channel) ..
-    ",sourceport:" .. tostring(channel) ..
+  -- [x] TODO: seperate the TCP layer from the IPv4 layer
+  -- [ ] TODO: (re)implement the IPv4 layer
+  -- [ ] TODO: Implement the ICMP layer.
+
+  -- TCP Layer
+  local tcp = "#layer:tcp" ..
+    ",version:" .. tcpver ..
+    ",dest:" .. tostring(channel) ..
+    ",source:" .. tostring(channel) ..
     ",seg:0" ..
     ",checksum:" .. fcs16.hash(body) ..
     ",#"
-  -- END HEADER GEN --
+
+  -- IPv4 Layer
+  local ipv4 = "#layer:ipv4" ..
+    ",version:" .. ipv4ver ..
+    ",tl:10000" ..
+    ",id:" .. net:genIPv4ID() ..
+    ",flag:1" ..  -- don't fragment (yet)
+    ",source:" .. tostring(this.inf[side].ip) ..
+    ",dest:" .. tostring(ip)
+
+  -- IPv4 checksum
+  ipv4 = ipv4 ..
+    ",checksum:" .. fcs16.hash(ipv4) ..
+    ",#"
+
+  local header = tcp .. ipv4
 
   -- form the packet
   local packet = header..body
@@ -230,6 +266,10 @@ function net.send(this, ip, side, msg, channel)
   mod.transmit(65535, 65535, packet)
 
   return true
+end
+
+function net.genIPv4ID()
+  return 000000 -- placeholder
 end
 
 --[[
@@ -258,7 +298,8 @@ end
   @return data
 ]]
 function net.receive(this, sid, message)
-  -- TODO: Parse *only* within the first #<data>#
+  -- [ ] TODO: Parse *only* within the first #<data>#
+
   -- manipulation
   local frm = tostring(string.match(message, "from:([0-9.]+),"))
   local to  = tostring(string.match(message, "to:([0-9.]+),"))
@@ -311,6 +352,17 @@ function net.getInterfaces(this)
 
   -- return the object
   return o
+end
+
+--[[
+  explodes an IP into a table per digit.
+]]
+function net.ipToTable(ip)
+  local tip = {}
+
+
+
+  return tip
 end
 
 --[[
@@ -378,9 +430,12 @@ function net.handoff(this, sid, message)
     end
   end
 
-  -- safe gaurd
+  -- failsafe
   if tostring(this.inf[sid]) == nil then
     logv.write("CRIT: got packet, but interface ! exist")
+
+  -- if it has a subnet, don't broadcast it there.
+  -- TODO: broadcast it there if it matchs that network.
   elseif isSub == true then
     logn.write("is on local subnet, don't forward")
   else
