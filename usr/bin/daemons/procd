@@ -76,4 +76,8 @@ elseif args[1] == 'init' then
   if fs.exists('/usr/proc') then
     fs.delete('/usr/proc')
   end
+
+  local kcmd = fs.open('/usr/proc/kcmdline', 'w')
+  kcmd.writeLine(textutils.serialize(params))
+  kcmd.close()
 end
