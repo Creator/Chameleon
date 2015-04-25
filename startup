@@ -41,7 +41,6 @@ end
 
 local w, h = term.getSize()
 
-local msg = "Chameleon Bootloader"
 
 local function draw()
 	-- clear with black screen
@@ -51,7 +50,7 @@ local function draw()
 
 	-- write title in centre
 	term.setCursorPos( w / 2 - #msg / 2 + 1, 2 )
-	term.write( msg )
+	term.write "Chameleon Kernel Selector"
 
 	-- borders
 	term.setCursorPos( 1, 4 )
