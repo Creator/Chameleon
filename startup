@@ -8,7 +8,7 @@ local function load(i)
   if fs.exists(fs.combine(options[i], '/main.lua')) then
     local ok, err = loadfile(fs.combine(options[i], '/main.lua'))
     if not ok then error(err) end
-    ok(options[i], "/usr/bin/init", true)
+    ok({["kernel_root"] = options[i], ["init"] = '/usr/bin/init'})
   else
     print('Trying to load unexisting kernel. Are you sure ' .. fs.combine(options[i], 'main.lua') .. 'exists?')
     error()
@@ -41,7 +41,7 @@ end
 
 local w, h = term.getSize()
 
-local msg = "Chameleon Bootloader"
+local msg = "Chameleon Kernel Selector"
 
 local function draw()
 	-- clear with black screen

@@ -154,7 +154,7 @@ function sysw.registerHandler(event, handlerFunc)
 end
 
 function sysw.patch()
-  dofile(fs.combine(_G.params.root, '/lib/libk.lua'))
+  dofile(fs.combine(_G.params.kernelRoot, '/lib/libk.lua'))
   modules.reloadAllModules()
 end
 
