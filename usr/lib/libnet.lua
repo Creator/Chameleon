@@ -397,7 +397,7 @@ function net.receive(this, sid, message)
     logn.write("dropping; from " .. ipv4.source .. ": ERRNOTOURS ["..ipv4.dest.."] ")
   else
     fData = data.data
-    logn.write("recieved: ".. fData .. " from " .. ipv4.source)
+    logn.write("recieved: ".. tostring(fData) .. " from " .. ipv4.source)
   end
 
   return fData;
