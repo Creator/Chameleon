@@ -78,7 +78,7 @@ end
 
 function dev.populate()
   devices = {} -- clear on populate, should reset.
-  
+
   for k, v in pairs(peripheral.getNames()) do
     local ret = dev.register(peripheral.getType(v), v)
     table.insert(devices, ret)
@@ -98,7 +98,7 @@ function dev.get(type)
   end
 
   -- we must've gotten nothing, so return nothing
-  return {}
+  return false
 end
 
 --[[
@@ -115,7 +115,7 @@ function dev.getAll(type)
   end
 
   -- we must've gotten nothing, so return nothing
-  return o
+  return false
 end
 
 dev.list = devices
