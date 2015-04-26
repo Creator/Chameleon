@@ -313,18 +313,51 @@ end
   @return data
 ]]
 function net.receive(this, sid, message)
+  if type(this) ~= "table" then
+    print("not called correctly, use :")
+    return false
+  end
+
   -- [x] TODO: implement layer parsing, with fallsafe if corrupt
   -- [ ] TODO: (re)Implement TCP libnet specs.
   -- [ ] TODO: (re)Implement the new IPv4 specs.
   -- [ ] TODO: Implement the new ICMP specs.
 
-  -- set up the layer tables
-  icmp = {}
-  tcp  = {}
-  ipv4 = {}
-  data = {}
+  local l = this:parseLayers(message)
 
-  -- first we parse the transport layer.
+  -- build our objects
+  local tcp  = l.tcp
+  local ipv4 = l.ipv4
+  local data = l.data
+
+  local fData = nil
+
+  -- parse it!
+  if tostring(this.inf[sid]) == nil then
+    logn.write("CRIT: got packet, but interface ! exist")
+  elseif ipv4.dest ~= tostring(this.inf[sid].ip) then
+    logn.write("dropping; from " .. ipv4.source .. ": ERRNOTOURS ["..ipv4.dest.."] ")
+  else
+    fData = data.data
+    logn.write("recieved: ".. tostring(fData) .. " from " .. ipv4.source)
+  end
+
+  return fData;
+end
+
+function net.parseLayers(this, message)
+  if type(this) ~= "table" then
+    print("not called correctly, use :")
+    return false
+  end
+
+  -- scope.
+  local icmp = {}
+  local tcp  = {}
+  local ipv4 = {}
+  local data = {}
+
+  -- pass through each layer.
   for i,v in pairs(string.split(message, ";")) do
     -- remove the hash(es)
     v = string.gsub(v, "#", "")
@@ -388,19 +421,15 @@ function net.receive(this, sid, message)
     end
   end
 
-  local fData = nil
+  -- build the return object
+  local layers = {}
+  layers.tcp   = tcp
+  layers.ipv4  = ipv6
+  layers.ipv4  = ipv4
+  layers.data  = data
 
-  -- parse it!
-  if tostring(this.inf[sid]) == nil then
-    logn.write("CRIT: got packet, but interface ! exist")
-  elseif ipv4.dest ~= tostring(this.inf[sid].ip) then
-    logn.write("dropping; from " .. ipv4.source .. ": ERRNOTOURS ["..ipv4.dest.."] ")
-  else
-    fData = data.data
-    logn.write("recieved: ".. tostring(fData) .. " from " .. ipv4.source)
-  end
-
-  return fData;
+  -- return the final object
+  return layers
 end
 
 --[[
@@ -429,9 +458,7 @@ end
   explodes an IP into a table per digit.
 ]]
 function net.ipToTable(ip)
-  local tip = string.split(ip, ".")
-
-  return tip
+  return string.split(ip, ".")
 end
 
 --[[
@@ -441,8 +468,6 @@ end
 ]]
 function net.forward(this, msg, side)
   -- [-] TODO: Sort out interfaces and broadcast accordingly.
-  -- [x] TODO: regex just the to: field instead of regen.
-  -- [x] TODO: Don't rely on dest.
 
   local inf = this.inf
 
@@ -471,9 +496,13 @@ end
 function net.handoff(this, sid, message)
   -- TODO: Parse *only* within the first #<data>#
   -- manipulation
-  local frm = tostring(string.match(message, "from:([0-9.]+),"))
-  local to  = tostring(string.match(message, "to:([0-9.]+),"))
-  local seg = tostring(string.match(message, "seg:([0-9]+),"))
+
+  local l = this:parseLayers(message)
+
+  -- build our objects
+  local tcp  = l.tcp
+  local ipv4 = l.ipv4
+  local data = l.data
 
   -- define scope
   local pdata = nil
@@ -487,11 +516,10 @@ function net.handoff(this, sid, message)
     logn.write("inspecting packet")
 
     -- currently only works on xxx.xxx.xxx.<dif> subnets, no xxx.xxx.<dif>.xxx
-    local major = string.match(to, "^([0-9]+.[0-9]+.[0-9]+)")
+    local major = string.match(ipv4.dest, "^([0-9]+.[0-9]+.[0-9]+)")
 
     -- local subip = string.match(to, ".([0-9]+)$")
     local submj = string.match(this.inf[sid].subnet, "^([0-9]+.[0-9]+.[0-9]+)")
-
 
     if major == submj then
       logn.write("packet is on subnet")
