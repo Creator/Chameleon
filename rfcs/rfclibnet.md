@@ -21,9 +21,12 @@ real world.
 
   * sequence is seq number of the packet.
 
+**Notes**:
+
+  * `checksum` is a fcs16 checksum.
+
 ```
-#layer:tcp,version:101,source:65535,dest:65535,seq:0,checksum:70708,
-ack:0,fin:0,;
+#layer:tcp,version:101,source:65535,dest:65535,seq:0,ack:0,fin:0,checksum:70708,;
 ```
 
 ### IPv4 implementation (header)
@@ -44,8 +47,14 @@ of the Internet Protocol (IP) Internet, and routes most traffic on the Internet.
   * protocol `0xFF` is for normal traffic over libnet.
   * protocol `0x01` is for ICMP. (not special, but noteworthy)
 
+**Notes**:
+
+  * `ttl` is in seconds.
+  * `checksum` is a fcs16 checksum.
+  * `id` is a 24 long int
+
 ```
-#layer:ipv4,version:100,ttl:10000,id:0xfff,flag:0,
+#layer:ipv4,version:100,ttl:1,id:0xfff,flag:0,
 source:192.168.1.1,protocol:0xFF,
 dest:192.168.1.2,checksum:16bits,;
 ```
