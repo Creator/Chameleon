@@ -29,6 +29,7 @@ TODO:
   * Finalize the other OSI layers
   * Error checking
   * UDP/TCP (UDP done)
+  * make sending different prots not require so much DRY.
 
 Coding Style:
 
@@ -55,11 +56,20 @@ local net = {}
 logn = {}
 logn.msg = {}
 
--- DEPRECATED
-net.ip = nil
-
--- New system
+-- interface table
 net.inf = {}
+
+-- table for types
+net.layers = {}
+net.layers.transport = {}
+net.layers.network = {}
+net.layers.data = {}
+
+-- setup each table type
+net.layers.transport["tcp"] = true
+net.layers.network["ipv4"] = true
+net.layers.data["data"] = true
+net.layers.data["icmp"] = true
 
 -- network log, mostly for insight on the proto
 function logn.write(msg)
@@ -183,7 +193,7 @@ function net.deregisterInterface(this, side, detached)
 end
 
 --[[
-    Create a packet and broadcast it onto the network
+    Create a data packet and broadcast it onto the network
 
     @param {string} ip - IP to send to
     @param {string} side - modem location to broadcast over
@@ -191,7 +201,7 @@ end
 
     @return {boolean} success or failure
 ]]
-function net.send(this, ip, side, msg, channel)
+function net.sendData(this, ip, side, msg, channel)
   if type(this) ~= "table" then
     error("not called correctly, use :")
     return false
@@ -220,19 +230,95 @@ function net.send(this, ip, side, msg, channel)
     return false
   end
 
-  -- header and body
-  -- body before header, must have correct checksum
-  local body = base64.encode(tostring(msg))
+  -- body layer is the data layer.
+  local body = "layer:data" ..
+    ",data:" .. base64.encode(tostring(msg))
 
-  -- [x] TODO: seperate the TCP layer from the IPv4 layer
-  -- [x] TODO: (re)implement the IPv4 layer
-  -- [ ] TODO: Implement the ICMP layer.
+  -- [-] TODO: Implement the ICMP layer.
+  -- [ ] TODO: have tcp checksum all of it's layers.
+  -- [ ] TODO: create a TCP checksum for it's actual header.
 
   -- TCP Layer
   local tcp = "layer:tcp" ..
     ",version:" .. tcpver ..
     ",dest:" .. tostring(channel) ..
     ",source:" .. tostring(channel) ..
+    ",ack:" .. tostring(0) .. -- todo
+    ",fin:" .. tostring(0) .. -- todo as well
+    ",seg:0" ..
+    ",checksum:" .. fcs16.hash(body) ..
+    ",;"
+
+  -- IPv4 Layer
+  local ipv4 = "layer:ipv4" ..
+    ",version:" .. ipv4ver ..
+    ",tl:10000" ..
+    ",id:" .. net:genIPv4ID() ..
+    ",flag:1" ..  -- don't fragment (yet)
+    ",source:" .. tostring(this.inf[side].ip) ..
+    ",dest:" .. tostring(ip)
+
+  -- IPv4 checksum
+  ipv4 = ipv4 ..
+    ",checksum:" .. fcs16.hash(ipv4) ..
+    ",;"
+
+  local header = "#" .. tcp .. ipv4 .. "#" -- encasp it into the header field,
+
+  -- form the packet
+  local packet = header..body
+
+  -- silently log the packet data
+  logn.log(packet)
+
+  -- broadcast the data to every machine on the network.
+  local mod = peripheral.wrap(side)
+
+  -- broadcast on the rednet channel
+  mod.transmit(65535, 65535, packet)
+
+  return true
+end
+
+--[[
+  broadcast a ICMP message
+
+  :D
+]]
+function net.sendicmp(this, ip, side, icmptype, icmpcode)
+  if type(this) ~= "table" then
+    error("not called correctly, use :")
+    return false
+  end
+
+  if channel == nil then
+    -- default "port"
+    channel = 65535
+  end
+
+  -- failsafe checks
+  if tostring(this.inf[side]) == nil then
+    error("interface isn't registered")
+    return false
+  elseif this.inf[side].ip == "null" then
+    error("no ip assigned")
+    return false
+  end
+
+  -- body layer is the data layer.
+  local body = "layer:icmp" ..
+    ",type:" .. tostring(icmptype) ..
+    ",code:" .. tostring(icmpcode)
+
+  body = body ..",checksum:" .. fcs16.hash(body)
+
+  -- TCP Layer
+  local tcp = "layer:tcp" ..
+    ",version:" .. tcpver ..
+    ",dest:" .. tostring(channel) ..
+    ",source:" .. tostring(channel) ..
+    ",ack:" .. tostring(0) .. -- todo
+    ",fin:" .. tostring(0) .. -- todo as well
     ",seg:0" ..
     ",checksum:" .. fcs16.hash(body) ..
     ",;"
@@ -275,6 +361,8 @@ end
 --[[
   Packet reciever, loops over net.receive()
 
+  NOTE: This blocks.
+
   @return false on failure
 ]]
 function net.d(this)
@@ -298,61 +386,191 @@ end
   @return data
 ]]
 function net.receive(this, sid, message)
+  if type(this) ~= "table" then
+    print("not called correctly, use :")
+    return false
+  end
+
   -- [x] TODO: implement layer parsing, with fallsafe if corrupt
-  -- [ ] TODO: (re)Implement TCP libnet specs.
-  -- [ ] TODO: (re)Implement the new IPv4 specs.
+  -- [x] TODO: (re)Implement TCP libnet specs.
+  -- [x] TODO: (re)Implement the new IPv4 specs.
   -- [ ] TODO: Implement the new ICMP specs.
 
-  -- first we parse the transport layer.
+  local l = this:parseLayers(message)
+
+  -- build our objects
+  local tcp  = l.tcp
+  local ipv4 = l.ipv4
+  local data = l.data
+  local icmp = l.icmp
+
+  local fData = nil
+
+  -- parse it!
+  if tostring(this.inf[sid]) == nil then
+    logn.write("CRIT: got packet, but interface ! exist")
+  elseif ipv4.dest ~= tostring(this.inf[sid].ip) then
+    logn.write("dropping; from " .. ipv4.source .. ": ERRNOTOURS ["..ipv4.dest.."] ")
+  elseif data.type == "data" then
+    fData = data.data
+    logn.write("recieved: ".. tostring(fData) .. " from " .. ipv4.source)
+  elseif data.type == "icmp" then
+    icmpcode = tostring(icmp.code)
+    icmptype = tostring(icmp.type)
+
+    logn.write("recv icmp type " .. icmptype .. " code " .. icmpcode ..
+      " from " .. ipv4.source)
+
+    -- handle the ICMP.
+
+    if this:doICMP(icmptype, icmpcode, l, sid) == false then
+      logn.write("error: icmp couldn't be handled: ERRNOTRECOGNIZED")
+    end
+  end
+
+  return fData;
+end
+
+function net.doICMP(this, icmptype, icmpcode, req, side)
+  if icmptype == "0" then
+    if icmpcode == "0" then
+      return true -- do nothing per specs
+    elseif icmpcode == "1" then
+      this:sendicmp(req.ipv4.source, side, 0, 0)
+      logn.write("responded to a ping")
+    elseif icmpcode == "2" then
+      this:sendicmp(req.ipv4.source, side, 0, 3)
+      logn.write("responded to a tracert")
+    elseif icmpcode == "3" then
+      logn.write("receieved a traceroute resp.")
+    else
+      logn.write("icmp: [1] not recognized code")
+      return false
+    end
+  else
+    logn.write("icmp: not recognized type")
+    return false
+  end
+
+  -- by default, return true
+  return true
+end
+
+function net.routerdoICMP(this, icmptype, icmpcode, req, side)
+  if icmptype == "0" then
+    if icmpcode == "0" then
+      return true -- do nothing per specs
+    elseif icmpcode == "2" then -- respond to a traceroute
+      net:sendicmp(req.ipv4.source, side, 0, 3)
+      logn.write("responded to a ping")
+    else
+      logn.write("icmp: [0] not recognized code")
+      return false
+    end
+  else
+    logn.write("icmp: not recognized type")
+    return false
+  end
+
+  -- by default, return true
+  return true
+end
+
+function net.parseLayers(this, message)
+  if type(this) ~= "table" then
+    print("not called correctly, use :")
+    return false
+  end
+
+  -- scope.
+  local icmp = {}
+  local tcp  = {}
+  local ipv4 = {}
+  local data = {}
+
+  -- pass through each layer.
   for i,v in pairs(string.split(message, ";")) do
-    -- remove the hash
+    -- remove the hash(es)
     v = string.gsub(v, "#", "")
-    print(v)
+    -- log the data.
+    logn.log(v)
 
+    -- parse the layer type
     local layer = tostring(string.match(v, "layer:([a-z0-9]+),"))
+    logn.log("layer [".. tostring(i) .. "] protocol is "..layer)
 
-    logn.write("layer protocol is "..layer)
+    -- check layer order
+    if i == 1 then
+      if this.layers.transport[layer] ~= true then
+        logn.write("1st layer is not a transport layer?")
+        return false
+      end
+    elseif i == 2 then
+      if this.layers.network[layer] ~= true then
+        logn.write("2nd layer is not a network layer?")
+        return false
+      end
+    elseif i == 3 then
+      if this.layers.data[layer] ~= true then
+        logn.write("3rd layer is not a data layer?")
+        return false
+      end
+    end
 
     -- check layer type
-    if layer == "ipv4" then
-      logn.write("layer is supported")
-    elseif layer == "tcp" then
-      logn.write("layer is supported")
+    if layer == "tcp" then
+      logn.write("parsing layer tcp")
+
+      -- parse the TCP data
+      tcp.version = tostring(string.match(v, "version:([0-9]+),"))
+      tcp.seg = tostring(string.match(v, "seg:([0-9]+),"))
+      tcp.destP = tostring(string.match(v, "dest:([0-9]+),"))
+      tcp.srcP = tostring(string.match(v, "source:([0-9]+),"))
+      tcp.ack = tostring(string.match(v, "ack:([0-9]+),"))
+      tcp.fin = tostring(string.match(v, "fin:([0-9]+),"))
+      tcp.checksum = tostring(string.match(v, "checksum:([0-9]+),"))
+    elseif layer == "ipv4" then
+      logn.write("parsing layer ipv4")
+
+      -- parse the ipv4 layer
+      ipv4.version = tostring(string.match(v, "version:([0-9]+),"))
+      ipv4.ttl = tostring(string.match(v, "ttl:([0-9]+),"))
+      ipv4.id = tostring(string.match(v, "id:([0-9]+),"))
+      ipv4.flag = tostring(string.match(v, "flag:([0-9]+),"))
+      ipv4.dest = tostring(string.match(v, "dest:([0-9.]+),"))
+      ipv4.source = tostring(string.match(v, "source:([0-9.]+),"))
+      ipv4.protocol = tostring(string.match(v, "protocol:([0-9a-zA-Z]+),"))
+      ipv4.checksum = tostring(string.match(v, "checksum:([0-9]+),"))
+    elseif layer == "data" then
+      logn.write("parsing layer data")
+
+      -- parse the data layer
+      data.data = tostring(string.match(v, "data:([a-zA-Z=]+)"))
+      data.data = base64.decode(data.data) -- unmask the data
+
+      data.type = "data"
+    elseif layer == "icmp" then
+      logn.write("parsing layer icmp")
+      icmp.type = tostring(string.match(v, "type:([0-9]+),"))
+      icmp.code = tostring(string.match(v, "code:([0-9]+),"))
+      icmp.checksum = tostring(string.match(v, "checksum:([0-9]+)"))
+
+      data.type = "icmp"
     else
-      logn.write("unknown layer given")
+      logn.write("unknown layer received")
     end
   end
 
-  -- manipulation
-  local frm = tostring(string.match(message, "from:([0-9.]+),"))
-  local to  = tostring(string.match(message, "to:([0-9.]+),"))
-  local seg = tostring(string.match(message, "seg:([0-9]+),"))
-  local destP = tostring(string.match(message, "destport:([0-9]+),"))
-  local srcP = tostring(string.match(message, "sourceport:([0-9]+),"))
-  local checksum = tostring(string.match(message, "checksum:([0-9]+),"))
+  -- build the return object
+  local layers = {}
+  layers.tcp   = tcp
+  layers.ipv6  = ipv6
+  layers.ipv4  = ipv4
+  layers.icmp  = icmp
+  layers.data  = data
 
-  -- define scope
-  local pdata = nil
-
-  if tostring(this.inf[sid]) == nil then
-    logv.write("CRIT: got packet, but interface ! exist")
-  elseif to ~= tostring(this.inf[sid].ip) then
-    logn.write("dropping packet from " .. frm .. ": ERRNOTOURS ")
-  else
-    -- get the data by removing the header
-    pdata = tostring(string.gsub(message, "#.+#", ""))
-
-    -- error checking
-    local h = tostring(fcs16.hash(pdata))
-
-    if h ~= checksum then
-      logn.write("packet invalid [INVALIDCHECKSUM]")
-    else
-      logn.write("recieved: ".. pdata .. " from " .. frm)
-    end
-  end
-
-  return pdata;
+  -- return the final object
+  return layers
 end
 
 --[[
@@ -381,11 +599,7 @@ end
   explodes an IP into a table per digit.
 ]]
 function net.ipToTable(ip)
-  local tip = {}
-
-
-
-  return tip
+  return string.split(ip, ".")
 end
 
 --[[
@@ -393,22 +607,35 @@ end
 
   @return nil
 ]]
-function net.forward(this, msg, side)
+function net.forward(this, msg, subnet, side)
   -- [-] TODO: Sort out interfaces and broadcast accordingly.
-  -- [x] TODO: regex just the to: field instead of regen.
-  -- [x] TODO: Don't rely on dest.
 
   local inf = this.inf
+
+  logn.write("subnet for packet: "..subnet)
 
   -- sort out each registered interface.
   for k, v in pairs(inf) do
     -- TODO: Optimize this to determine if we have another subnet setup.
     if tostring(v.subnet) ~= "nil" then
-      logn.write("skipping side "..v.side..", ERRHASSUB")
+      local submj = tostring(string.match(v.subnet, "^([0-9]+.[0-9]+.[0-9]+)"))
+      if subnet == submj then
+        logn.write("forwarding packet over ".. v.side)
+
+        local m = peripheral.wrap(v.side)
+        m.open(65535)
+        m.transmit(65535, 65535, msg)
+
+        logn.write("done")
+
+        return
+      else
+        logn.write("packet subnet != inf " .. v.side .." subnet, skip")
+      end
+    elseif v.side == side then
+      logn.write("origin side, skipping")
     else
       logn.write("forwarding packet over ".. v.side)
-
-      logn.log(v.side..": "..msg)
 
       local m = peripheral.wrap(v.side)
       m.open(65535)
@@ -423,15 +650,19 @@ end
   Parse packets and determine where they should go without causing net clutter.
 ]]
 function net.handoff(this, sid, message)
-  -- TODO: Parse *only* within the first #<data>#
-  -- manipulation
-  local frm = tostring(string.match(message, "from:([0-9.]+),"))
-  local to  = tostring(string.match(message, "to:([0-9.]+),"))
-  local seg = tostring(string.match(message, "seg:([0-9]+),"))
+  -- parse the message layers
+  local l = this:parseLayers(message)
+
+  -- build our objects
+  local tcp  = l.tcp
+  local ipv4 = l.ipv4
+  local data = l.data
+  local icmp = l.icmp
 
   -- define scope
   local pdata = nil
   local isSub = false
+  local subnet = nil
 
   -- Determine if in or out
   if tostring(this.inf[sid].subnet) == "nil" then
@@ -441,17 +672,18 @@ function net.handoff(this, sid, message)
     logn.write("inspecting packet")
 
     -- currently only works on xxx.xxx.xxx.<dif> subnets, no xxx.xxx.<dif>.xxx
-    local major = string.match(to, "^([0-9]+.[0-9]+.[0-9]+)")
+    subnet = string.match(ipv4.dest, "^([0-9]+.[0-9]+.[0-9]+)")
 
     -- local subip = string.match(to, ".([0-9]+)$")
     local submj = string.match(this.inf[sid].subnet, "^([0-9]+.[0-9]+.[0-9]+)")
 
-
-    if major == submj then
+    if subnet == submj then
       logn.write("packet is on subnet")
       isSub = true
     end
   end
+
+  local s = 0
 
   -- failsafe
   if tostring(this.inf[sid]) == nil then
@@ -461,9 +693,16 @@ function net.handoff(this, sid, message)
   -- TODO: broadcast it there if it matchs that network.
   elseif isSub == true then
     logn.write("is on local subnet, don't forward")
-  else
+    s = 1
+  elseif icmp.type ~= nil then -- we handle ICMP differently
+    logn.write("received a icmp")
+    this:routerdoICMP(tostring(icmp.type), tostring(icmp.code), l, sid)
+  end
+
+  -- hacky, but it works for now.
+  if s == 0 then
     logn.write("passing onto this:forward")
-    this:forward(message)
+    this:forward(message, subnet, sid) -- pass the message and it's subnet
   end
 
   return pdata;

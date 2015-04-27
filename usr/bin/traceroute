@@ -22,7 +22,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 
-Network controller, set DHCP, statics, etc all right here!
+check what the packets go through, and maybe some day distance plus time...
 
 Maintainer: Jared Allard <rainbowdashdc@pony.so>
 ]]
@@ -30,30 +30,20 @@ Maintainer: Jared Allard <rainbowdashdc@pony.so>
 local version = "1.0-alpha"
 
 local libnet = _G.libnet
+local libprog = require("libprog")
 local Args = {...}
 
---[[
-  HOWTO:
-
-  invoke: netctl <dev> options
-
-  i.e netctl top set ip 192.168.1.1
-]]
-
-if Args[2] == "set" then
-  if Args[3] == "ip" then
-    if Args[4] ~= nil then
-      libnet.inf[Args[1]].ip = Args[3]
-    else
-      error("no ip provided")
-    end
-  else if Args[3] == "gateway" then
-    if Args[4] ~= nil then
-      libnet.inf[Args[1]].gateway = Args[3]
-    else
-      error("no gateway provided")
-    end
-  end
-elseif Args[1] == "-v" then
+-- check the arguments
+if Args[1] == "-v" then
   print(version)
+  return
 end
+
+local ip = Args[1]
+
+-- bind our event handlers
+libprog.create()
+  :add(function()
+    print(ip)
+  end)
+  :start()
