@@ -1,0 +1,16 @@
+kernel.log
+.test
+herp
+
+usr/etc/laporte/cache
+usr/etc/laporte/pkg
+
+kernelnext/**
+
+tmp/
+dev/**
+dev
+dev/
+usr/dev/
+usr/proc/
+proc/
