@@ -21,4 +21,6 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 ]]
-loadfile(fs.combine(fs.getDir(shell.getRunningProgram()), '/kernel/boot.lua'))('kernel_root='..fs.combine(fs.getDir(shell.getRunningProgram()), 'kernel/'))
+function main()
+  spawn('/rom/programs/lua')
+end

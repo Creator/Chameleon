@@ -1,0 +1,4 @@
+[submodule "kernel"]
+	path = kernel
+	url = git@github.com:TARDIX/Kernel
+	branch = rewrite

@@ -21,4 +21,43 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 ]]
-loadfile(fs.combine(fs.getDir(shell.getRunningProgram()), '/kernel/boot.lua'))('kernel_root='..fs.combine(fs.getDir(shell.getRunningProgram()), 'kernel/'))
+local libt = {}
+
+local function fore(tab, fun)
+  for k, v in pairs(tab) do
+    fun(k, v)
+  end
+end
+
+libt.syscretval = 0
+
+function table.from(tab, sta)
+  local buf = {}
+  for i = sta, #tab do
+    buf[#buf] = tab[i]
+  end
+  return buf
+end
+
+fore(_G, function(key, val)
+  libt[key] = function(...)
+    spawn(function()
+      local timer = os.startTimer(10)
+      while true do
+        local data = {coroutine.yield()}
+        if data[1] == 'syscall_return' then
+          libt.syscretval = unpack(table.from(data, 1))
+        elseif data[1] == 'syscall_failure' and data[2] == 'unknown' then
+          printError('unknown system call ' .. data[3])
+        elseif data[1] == 'timer' and data[2] == timer then
+          break
+        end
+      end
+    end)
+    os.queueEvent('syscall', 'sys_'.. key, ...)
+    return libt.syscretval
+  end
+end)
+
+
+return libt
