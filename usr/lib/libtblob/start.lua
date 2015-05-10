@@ -22,5 +22,5 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 ]]
 function main()
-  spawn('/rom/programs/lua')
+  run.spawn('/rom/programs/lua')
 end

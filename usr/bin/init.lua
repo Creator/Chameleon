@@ -23,5 +23,5 @@ THE SOFTWARE.
 ]]
 
 function main()
-  spawn('/usr/lib/libtblob/start.lua')
+  run.spawn('/usr/lib/libtblob/start.lua')
 end
