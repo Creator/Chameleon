@@ -21,7 +21,36 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 ]]
-
 function main()
-  run.spawn('/usr/lib/libtblob/start.lua')
+  local info = run.require('libinfo')
+  if info then
+    do
+      if fs.exists('/usr/etc/motd') then
+        local file = fs.open('/usr/etc/motd', 'r')
+        print(file.readAll())
+        file.close()
+      elseif fs.exists('/usr/etc/release') then
+        local file = fs.open('/usr/etc/release', 'r')
+        write('initd is starting up ')
+        info.printInColor(colors.black, colors.cyan, file.readAll())
+        file.close()
+      else
+        write('initd is starting up ')
+        info.printInColor(colors.black, colors.cyan, 'your TARDIX system.\n')
+      end
+    end
+  else
+    print(info)
+  end
+
+  if fs.exists('/usr/etc/init.d') then
+    for k, v in pairs(fs.list('/usr/etc/init.d')) do
+      info.begin('Starting ' .. v:gsub('.lua', '') .. '...')
+      local ret = run.spawn(fs.combine('/usr/etc/init.d', v))
+      info.stop(ret or true)
+    end
+  end
+
+  run.spawn('/rom/programs/lua')
+
 end
