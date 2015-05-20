@@ -21,6 +21,8 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 ]]
+
+
 function main()
   local info = run.require('libinfo')
   if info then
@@ -50,7 +52,15 @@ function main()
       info.stop(ret or true)
     end
   end
+  local envs = {}
 
+  function getenv(var)
+    return envs[var]
+  end
+
+  function setenv(n, v)
+    envs[var] = n
+  end
   run.spawn('/rom/programs/lua')
 
 end

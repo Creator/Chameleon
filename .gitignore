@@ -1,1 +1,20 @@
+<<<<<<< HEAD
 dev/
+=======
+kernel.log
+.test
+herp
+
+usr/etc/laporte/cache
+usr/etc/laporte/pkg
+
+kernelnext/**
+
+tmp/
+dev/**
+dev
+dev/
+usr/dev/
+usr/proc/
+proc/
+>>>>>>> 92889a5dbc34fb6281ff1e5447d5934a76ad8834
