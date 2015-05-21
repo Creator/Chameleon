@@ -35,6 +35,14 @@ function libinfo.printInColor(bg, fg, str)
   print(str)
 end
 
+function libinfo.writeInColor(bg, fg, str)
+  if term.isColor and term.isColor() then
+    term.setBackgroundColor(bg)
+    term.setTextColor(fg)
+  end
+  write(str)
+end
+
 function libinfo.begin(name)
   libinfo.printInColor(colors.black, colors.white, '['..os.clock()..'] ' .. name .. '')
 end
@@ -43,15 +51,15 @@ function libinfo.stop(status)
   if status then
     local x, y = term.getSize()
     local cx, cy = term.getCursorPos()
-    term.setCursorPos(x - #('[ OK]'), cy - 1)
+    term.setCursorPos(x - #('[ OK ]'), cy - 1)
 
-    libinfo.printInColor(colors.black, colors.green, '[ OK]')
+    libinfo.printInColor(colors.black, colors.green, '[ OK ]')
   else
     local x, y = term.getSize()
     local cx, cy = term.getCursorPos()
-    term.setCursorPos(x - #('[ OK]'), cy - 1)
+    term.setCursorPos(x - #('[ FAIL ]'), cy - 1)
 
-    libinfo.printInColor(colors.black, colors.red, '[ FAIL]')
+    libinfo.printInColor(colors.black, colors.red, '[ FAIL ]')
   end
 
   if term.isColor and term.isColor() then

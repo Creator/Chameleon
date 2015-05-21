@@ -31,9 +31,22 @@ function main()
         local file = fs.open('/usr/etc/motd', 'r')
         print(file.readAll())
         file.close()
-      elseif fs.exists('/usr/etc/release') then
+        local x, y = term.getSize()
+        info.printInColor(colors.black, colors.red, ('-'):rep(x))
+      elseif fs.exists('/usr/etc/motd.lua') then
+        local ok, err = loadfile('/usr/etc/motd.lua')
+        if not ok then
+          printError('error in motd: ' .. err)
+        else
+          ok()
+        end
+        local x, y = term.getSize()
+        info.printInColor(colors.black, colors.red, ('-'):rep(x))
+      end
+
+      if fs.exists('/usr/etc/release') then
         local file = fs.open('/usr/etc/release', 'r')
-        write('initd is starting up ')
+        info.writeInColor(colors.black, colors.white, 'initd is starting up ')
         info.printInColor(colors.black, colors.cyan, file.readAll())
         file.close()
       else

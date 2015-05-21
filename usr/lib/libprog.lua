@@ -28,7 +28,7 @@ local program_mt = {}
 
 function program_mt:add(func)
   if not self.proc then
-    self.proc = (getfenv(2).process.this and getfenv(2).process.this or process.main):spawnSubprocess(getRandomTardixID())
+    self.proc = (getfenv(2).threading.this and getfenv(2).threading.this or threading.scheduler):spawnSubprocess()
   end
 
   self.proc:spawnThread(func, getRandomTardixID())
@@ -138,6 +138,17 @@ end
 
 function daemon_mt:run(...)
   self:getFunction()(...)
+end
+
+function daemon_mt:spawn()
+  local fn = self:getFunction()
+  self.thread = (getfenv(2).threading.this and getfenv(2).threading.this or threading.scheduler):spawnThread(
+    function()
+      while true do
+        fn(coroutine.yield())
+      end
+    end
+  )
 end
 
 daemon_mt.__index = daemon_mt
