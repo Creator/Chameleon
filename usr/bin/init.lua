@@ -62,10 +62,14 @@ function main()
   end
 
   if fs.exists('/usr/etc/init.d') then
-    for k, v in pairs(fs.list('/usr/etc/init.d')) do
-      info.begin('Starting ' .. v:gsub('.lua', '') .. '...')
-      local ret = run.spawn(fs.combine('/usr/etc/init.d', v))
-      info.stop(ret or true)
+    local ls = fs.list('/usr/etc/init.d')
+    table.sort(ls)
+    for k, v in ipairs(ls) do
+      if not fs.isDir(v) then
+        info.begin('Starting ' .. v:gsub('.lua', '') .. '...')
+        local ret = run.spawn(fs.combine('/usr/etc/init.d', v))
+        info.stop(ret or true)
+      end
     end
   end
   local envs = {}

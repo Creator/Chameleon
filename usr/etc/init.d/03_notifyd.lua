@@ -21,43 +21,24 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 ]]
-local libt = {}
 
-local function fore(tab, fun)
-  for k, v in pairs(tab) do
-    fun(k, v)
+function main()
+  fs.delete('/.notify-log')
+  for i = 1, #kmsg.queue do
+    local log = fs.open('/.notify-log', fs.exists('/.notify-log') and 'a' or 'w')
+    log.writeLine(kmsg.getLast())
+    log.flush()
+    log.close()
+  end
+  while true do
+    local data = {coroutine.yield()}
+    run.require('libprog').daemonize()
+      :addEvent('kernel_message', function()
+        local log = fs.open('/.notify-log', fs.exists('/.notify-log') and 'a' or 'w')
+        log.writeLine(kmsg.getLast())
+        log.flush()
+        log.close()
+      end)
+      :run(unpack(data))
   end
 end
-
-libt.syscretval = 0
-
-function table.from(tab, sta)
-  local buf = {}
-  for i = sta, #tab do
-    buf[#buf] = tab[i]
-  end
-  return buf
-end
-
-fore(_G, function(key, val)
-  libt[key] = function(...)
-    spawn(function()
-      local timer = os.startTimer(10)
-      while true do
-        local data = {coroutine.yield()}
-        if data[1] == 'syscall_return' then
-          libt.syscretval = unpack(table.from(data, 1))
-        elseif data[1] == 'syscall_failure' and data[2] == 'unknown' then
-          printError('unknown system call ' .. data[3])
-        elseif data[1] == 'timer' and data[2] == timer then
-          break
-        end
-      end
-    end)
-    os.queueEvent('syscall', 'sys_'.. key, ...)
-    return libt.syscretval
-  end
-end)
-
-
-return libt

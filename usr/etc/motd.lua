@@ -473,20 +473,30 @@ paintutils.drawImage(img, 6, 1)
 term.setBackgroundColor(colors.black)
 term.setTextColor(colors.blue)
 
+local function printC(sText)
+  local w, h = term.getSize()
+  local x, y = term.getCursorPos()
+  x = math.max(math.floor((w / 2) - (#sText / 2)), 0)
+  term.setCursorPos(x, y)
+
+  print(sText)
+end
+print('\n\n')
+
 if fs.exists('/.git/refs/heads/master') then
   local file = fs.open('/.git/refs/heads/master', 'r')
   local data = file.readLine():sub(1, 7)
   file.close()
 
-  print(('\n\nChameleon TARDIX (tag: %s)'):format(data))
+  printC(('Chameleon TARDIX (tag: %s)'):format(data))
 elseif fs.exists('/.git-tag') then
   local file = fs.open('/.git-tag', 'r')
   local data = file.readLine():sub(1, 7)
   file.close()
 
-  print(('\n\nChameleon TARDIX (tag: %s)'):format(data))
+  printC(('Chameleon TARDIX (tag: %s)'):format(data))
 else
-  print('\n\nChameleon TARDIX (tag: unknown)')
+  printC('Chameleon TARDIX (tag: unknown)')
 end
 
 if fs.exists('/.git/modules/kernel/refs/heads/rewrite') then
@@ -494,16 +504,16 @@ if fs.exists('/.git/modules/kernel/refs/heads/rewrite') then
   local data = file.readLine():sub(1, 7)
   file.close()
 
-  print(('TARDIX Kernel    (tag: %s)'):format(data))
+  printC(('TARDIX Kernel    (tag: %s)'):format(data))
 elseif kRoot and fs.exists(fs.combine(kRoot, '.git-tag')) then
   local file = fs.open(fs.combine(kRoot, '.git-tag'), 'r')
   local data = file.readLine():sub(1, 7)
   file.close()
 
-  print(('TARDIX Kernel    (tag: %s)'):format(data))
+  printC(('TARDIX Kernel    (tag: %s)'):format(data))
 else
-  print('TARDIX Kernel    (tag: unknown)')
+  printC('TARDIX Kernel    (tag: unknown)')
 end
-
-
-print(('Current time: %s \nDevices: %d \nComputer ID: %d'):format(textutils.formatTime(os.time(), true), table.size(devbus.devices), os.getComputerID()))
+printC(('Current time: %s'):format(textutils.formatTime(os.time(), true)))
+printC(('Devices: %d'):format(table.size(devbus.devices)))
+printC(('Computer ID: %d'):format(os.getComputerID()))
