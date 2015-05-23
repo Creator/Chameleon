@@ -81,6 +81,6 @@ function main()
   function setenv(n, v)
     envs[var] = n
   end
-  run.spawn('/rom/programs/lua')
+  run.spawn('/usr/bin/sh.lua')
 
 end
