@@ -25,14 +25,14 @@ THE SOFTWARE.
 
 function main()
   local info = run.require('libinfo')
-  if info then
+  if info and info.printInColor then
     do
       if fs.exists('/usr/etc/motd') then
         local file = fs.open('/usr/etc/motd', 'r')
         print(file.readAll())
         file.close()
         local x, y = term.getSize()
-        info.printInColor(colors.black, colors.red, ('-'):rep(x))
+        info.printInColor(colors.black, colors.red, string.rep('-', x))
       elseif fs.exists('/usr/etc/motd.lua') then
         local ok, err = loadfile('/usr/etc/motd.lua')
         if not ok then
@@ -41,7 +41,10 @@ function main()
           ok()
         end
         local x, y = term.getSize()
-        info.printInColor(colors.black, colors.red, ('-'):rep(x))
+        info.printInColor(
+        colors.black,
+        colors.red,
+        string.rep('-', x))
       end
 
       if fs.exists('/usr/etc/release') then
@@ -55,7 +58,7 @@ function main()
       end
     end
   else
-    print(info)
+    for k, v in pairs(info) do print('info.' .. k) end
   end
 
   if fs.exists('/usr/etc/init.d') then
