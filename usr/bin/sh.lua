@@ -22,7 +22,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 ]]
 
-local dir, path = '/','/:/usr/bin:/usr/sbin:/rom/programs';
+local dir, path, rp = '/','/:/usr/bin:/usr/sbin:/rom/programs','sh';
+local env = {}
 
 if term.isColor() then
 	path = path..":/rom/programs/advanced"
@@ -74,6 +75,8 @@ function shell.resolveP(file)
   for k, v in pairs(string.split(path, ':')) do
     if fs.exists(fs.combine(v, file)) then
       return (fs.combine(v, file))
+    elseif fs.exists(fs.combine(v, file) .. '.lua') then
+      return fs.combine(v, file) .. '.lua'
     end
   end
 
@@ -92,12 +95,18 @@ end
 function shell.run(file, ...)
   local f = shell.resolveP(file)
   if f then
+    rp = f
     local fn = fs.getDrive(f) == 'rom' and os.run or run.exece
 
     fn({
-      ['shell'] = shell
+      ['shell'] = shell,
+      ['env'] = env
     }, f, ...)
   end
+end
+
+function shell.getRunningProgram()
+  return rp
 end
 
 function shell.parse(str)
@@ -129,7 +138,6 @@ end
 function shell.exit()
   error(2)
 end
-
 
 function main()
   while true do
