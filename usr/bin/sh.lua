@@ -139,6 +139,13 @@ function shell.exit()
   error(2)
 end
 
+shell.setAlias("ls", "list")
+shell.setAlias("cp", "copy")
+shell.setAlias("mv", "move")
+shell.setAlias("rm", "delete")
+shell.setAlias("clr", "clear")
+shell.setAlias("rs", "redstone")
+
 function main()
   local history = {}
   while true do
@@ -154,7 +161,7 @@ function main()
 
 
     local inp = read(nil, history)
-    table.insert(history, inp)
+    table.insert(history, inp )
     local f, p = shell.parse(inp)
 
     shell.run(f, unpack(p))
