@@ -94,7 +94,7 @@ end
 
 function shell.run(file, ...)
   local f = shell.resolveP(file)
-  if f then
+  if f and fs.exists(f) and not fs.isDir(f) then
     rp = f
     local fn = fs.getDrive(f) == 'rom' and os.run or run.exece
 
@@ -102,6 +102,9 @@ function shell.run(file, ...)
       ['shell'] = shell,
       ['env'] = env
     }, f, ...)
+  elseif f and fs.isDir(f) then
+    print('/'.. f .. ': is a directory')
+    shell.setDir(f)
   end
 end
 
@@ -146,14 +149,38 @@ shell.setAlias("rm", "delete")
 shell.setAlias("clr", "clear")
 shell.setAlias("rs", "redstone")
 
+local tag;
+
+if fs.exists('/.git/modules/kernel/refs/heads/rewrite') then
+  local file = fs.open('/.git/modules/kernel/refs/heads/rewrite', 'r')
+  local data = file.readLine():sub(1, 7)
+  file.close()
+  tag = data
+elseif kRoot and fs.exists(fs.combine(kRoot, '.git-tag')) then
+  local file = fs.open(fs.combine(kRoot, '.git-tag'), 'r')
+  local data = file.readLine():sub(1, 7)
+  file.close()
+
+  tag = data
+else
+  tag = 'unknown'
+end
+
 function main()
   local history = {}
   while true do
     if term.isColor and term.isColor() then
+      term.setTextColor(colors.blue)
+    end
+    print(("{time: %s} [kernel: %s]"):format(
+      textutils.formatTime(os.time(), true),
+      tag
+    ))
+
+    if term.isColor and term.isColor() then
       term.setTextColor(colors.red)
     end
-
-    write(dir .. ' $ ')
+    write(('%s $ '):format(dir == '/' and '/' or '/' .. dir))
 
     if term.isColor and term.isColor() then
       term.setTextColor(colors.white)
