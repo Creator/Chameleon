@@ -24,7 +24,11 @@ THE SOFTWARE.
 ]]
 
 -- Hello.
-function main()
-  print("Hello, World!")
+function main(...)
+  if ... then
+    print('Hello, ', table.concat({...}, ' '), '!')
+  else
+    print("Hello, World!")
+  end
   return "hello"
 end

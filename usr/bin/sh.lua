@@ -140,6 +140,7 @@ function shell.exit()
 end
 
 function main()
+  local history = {}
   while true do
     if term.isColor and term.isColor() then
       term.setTextColor(colors.red)
@@ -152,7 +153,8 @@ function main()
     end
 
 
-    local inp = read()
+    local inp = read(nil, history)
+    table.insert(history, inp)
     local f, p = shell.parse(inp)
 
     shell.run(f, unpack(p))
