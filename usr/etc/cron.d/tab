@@ -24,9 +24,9 @@ THE SOFTWARE.
 
 {
   ['tasks'] = {
-    {
+    --[[{
       ['time'] = 'minute',
       ['run'] = {'/usr/bin/hello'}
-    }
+    }]]
   }
 }
