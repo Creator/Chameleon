@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 ]]
 
-function chameleon()
+function chameleon(x, y)
   term.clear()
   local cols = {
     colors.white,
@@ -254,7 +254,7 @@ function chameleon()
       },
     }
 
-    paintutils.drawImage(img, 1, 1)
+    paintutils.drawImage(img, x, y)
     sleep(1)
   end
 end
@@ -262,8 +262,9 @@ end
 function gifize(x, y, f, ...)
   return function()
     local imgs = {f, ...}
-    for k, v in pairs(imgs) do
+    for k, v in ipairs(imgs) do
       paintutils.drawImage(x, y, v)
+      coroutine.yield()
     end
   end
 end

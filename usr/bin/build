@@ -21,78 +21,79 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE. ]]
 
+function main()
+  local bs_env = {
+    ["builders"] = {}
+  }
+  setmetatable(bs_env, {["__index"] = _G})
 
-local bs_env = {
-  ["builders"] = {}
-}
-setmetatable(bs_env, {["__index"] = _G})
+  local builder = {}
 
-local builder = {}
+  function builder:addSource(src)
+    if not self.sources then error() end
 
-function builder:addSource(src)
-  if not self.sources then error() end
+    table.insert(self.sources, src)
+    return self
+  end
 
-  table.insert(self.sources, src)
-  return self
-end
+  function builder:setEntryPoint(out)
+    self.entry = out
+    return self
+  end
+  function builder:setOutput(out)
+    self.output = out
+    return self
+  end
 
-function builder:setEntryPoint(out)
-  self.entry = out
-  return self
-end
-function builder:setOutput(out)
-  self.output = out
-  return self
-end
+  function builder:run()
+    local out = ExecutableWriter:new()
+    if self.sources then
+      for k, v in pairs(self.sources) do
+        out:addPreloadFunction(loadfile(v))
+      end
+    end
 
-function builder:run()
-  local out = ExecutableWriter:new()
-  if self.sources then
-    for k, v in pairs(self.sources) do
-      out:addPreloadFunction(loadfile(v))
+    if not self.entry then
+      printError('no entry point')
+      return
+    end
+
+    out:addMainFunction(loadfile(self.entry))
+
+    if not self.output then
+      printError('no output')
+      return
+    end
+
+    out:write(self.output)
+  end
+
+  function bs_env.builder()
+    local ret = {
+      ["sources"] = {}
+    }
+    setmetatable(ret, {__index = builder})
+    table.insert(bs_env.builders, ret)
+    return ret
+  end
+
+
+  local function doBs(file)
+    local fn, err = loadfile(file)
+    if not fn then
+      printError(('Failed to load build script [%s] because of [%s].'):format(file, err))
+      error()
+    end
+
+    setfenv(fn, bs_env)
+    fn()
+
+    for k, v in pairs(bs_env.builders) do
+      v:run()
     end
   end
 
-  if not self.entry then
-    printError('no entry point')
-    return
-  end
+  local tArgs = {...}
 
-  out:addMainFunction(loadfile(self.entry))
-
-  if not self.output then
-    printError('no output')
-    return
-  end
-
-  out:write(self.output)
+  doBs(tostring(tArgs[1]))
 end
-
-function bs_env.builder()
-  local ret = {
-    ["sources"] = {}
-  }
-  setmetatable(ret, {__index = builder})
-  table.insert(bs_env.builders, ret)
-  return ret
-end
-
-
-local function doBs(file)
-  local fn, err = loadfile(file)
-  if not fn then
-    printError(('Failed to load build script [%s] because of [%s].'):format(file, err))
-    error()
-  end
-
-  setfenv(fn, bs_env)
-  fn()
-
-  for k, v in pairs(bs_env.builders) do
-    v:run()
-  end
-end
-
-local tArgs = {...}
-
-doBs(tostring(tArgs[1]))

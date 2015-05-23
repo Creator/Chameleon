@@ -3,7 +3,6 @@ The MIT License (MIT)
 
 Copyright (c) 2014-2015 the TARDIX team
 
-
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
 in the Software without restriction, including without limitation the rights
@@ -23,8 +22,32 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 ]]
 
--- Hello.
+local info = (run.require 'libinfo')
+local cron = (run.require 'libcron')
+
 function main()
-  print("Hello, World!")
-  return "hello"
+  local minute = os.startTimer(20)
+  local hour = os.startTimer(200)
+  local day = os.startTimer(2000)
+  local year = os.startTimer(20000)
+
+
+  while true do
+    local data = {coroutine.yield()}
+    if data[1] == 'timer' then
+      if data[2] == minute then
+        minute = os.startTimer(20)
+        cron.onMinute()
+      elseif data[2] == hour then
+        hour = os.startTimer(200)
+        cron.onHour()
+      elseif data[2] == day then
+        day = os.startTimer(2000)
+        cron.onDay()
+      elseif data[2] == year then
+        year = os.startTimer(20000)
+        cron.onYear()
+      end
+    end
+  end
 end
