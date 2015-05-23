@@ -4,7 +4,7 @@ The MIT License (MIT)
 Copyright (c) 2014-2015 the TARDIX team
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
+of this software and associated documentation files (the 'Software'), to deal
 in the Software without restriction, including without limitation the rights
 to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 copies of the Software, and to permit persons to whom the Software is
@@ -13,7 +13,7 @@ furnished to do so, subject to the following conditions:
 The above copyright notice and this permission notice shall be included in
 all copies or substantial portions of the Software.
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+THE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
 AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
@@ -475,4 +475,37 @@ paintutils.drawImage(img, 1, 1)
 term.setBackgroundColor(colors.black)
 term.setTextColor(cols[math.random(1, #cols)])
 
-print(("\nCurrent time: %s \nDevices: %d \nComputer ID: %d"):format(textutils.formatTime(os.time(), true), table.size(devbus.devices), os.getComputerID()))
+if fs.exists('/.git/refs/heads/master') then
+  local file = fs.open('/.git/refs/heads/master', 'r')
+  local data = file.readLine():sub(1, 7)
+  file.close()
+
+  print(('\nChameleon TARDIX (tag: %s)'):format(data))
+elseif fs.exists('/.git-tag') then
+  local file = fs.open('/.git-tag', 'r')
+  local data = file.readLine():sub(1, 7)
+  file.close()
+
+  print(('\nChameleon TARDIX (tag: %s)'):format(data))
+else
+  print('\nChameleon TARDIX (tag: unknown)')
+end
+
+if fs.exists('/.git/modules/kernel/refs/heads/rewrite') then
+  local file = fs.open('/.git/modules/kernel/refs/heads/rewrite', 'r')
+  local data = file.readLine():sub(1, 7)
+  file.close()
+
+  print(('TARDIX Kernel    (tag: %s)'):format(data))
+elseif kRoot and fs.exists(fs.combine(kRoot, '.git-tag')) then
+  local file = fs.open(fs.combine(kRoot, '.git-tag'), 'r')
+  local data = file.readLine():sub(1, 7)
+  file.close()
+
+  print(('TARDIX Kernel    (tag: %s)'):format(data))
+else
+  print('TARDIX Kernel    (tag: unknown)')
+end
+
+
+print(('Current time: %s \nDevices: %d \nComputer ID: %d'):format(textutils.formatTime(os.time(), true), table.size(devbus.devices), os.getComputerID()))
