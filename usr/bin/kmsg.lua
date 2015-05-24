@@ -30,11 +30,12 @@ local function printm(ind)
     for i = #kmsg.backup, 1, -1 do
       local v = kmsg.backup[i]
       sC(colors.blue)
-      write('[' .. i .. '] ')
+      write('[' .. i .. '/')
       sC(colors.red)
-      write('[' .. v.time .. ']')
+      write(v.time .. '/')
       sC(colors.green)
-      write(' [' .. v.sender .. '] ')
+      write(v.sender .. '] ')
+
       sC(colors.white)
       print(v.text)
     end
@@ -42,11 +43,12 @@ local function printm(ind)
     for i = ind, 1, -1 do
       local v = kmsg.backup[i]
       sC(colors.blue)
-      write('[' .. i .. '] ')
+      write('[' .. i .. '/')
       sC(colors.red)
-      write('[' .. v.time .. ']')
+      write(v.time .. '/')
       sC(colors.green)
-      write(' [' .. v.sender .. '] ')
+      write(v.sender .. '] ')
+
       sC(colors.white)
       print(v.text)
     end
