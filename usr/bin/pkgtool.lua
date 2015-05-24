@@ -48,13 +48,14 @@ local function build(file)
   local ret = {}
   if file.files then
     for i = 1, #file.files do
-      local data = http.get(files[i].url)
+
+      local data = http.get(file.files[i].url).readAll()
 
       table.insert(ret,{
         ['data'] = data,
         ['meta'] = {
           ['size'] = #data,
-          ['path'] = files[i].path
+          ['path'] = file.files[i].path
         }
       })
     end
@@ -85,7 +86,8 @@ function main(...)
       target = arg ; break
     elseif opt == 'I' then op = install
       target = arg; break
-    elseif opt == 'R' then op = remove break
+    elseif opt == 'R' then op = remove
+      target = arg; break
     elseif opt == 'h' then op = printh break
     elseif opt == 'v' then op = versio break
     elseif opt == '?' then printError('Missing required argument.') return end

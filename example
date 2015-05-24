@@ -1,0 +1,9 @@
+{
+  files = {
+     {
+        url = 'http://example.com',
+        path = 'bin/example'
+     }
+   },
+   target = 'example.com'
+}
