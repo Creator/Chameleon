@@ -29,6 +29,8 @@ local function printm(ind)
   if not ind then
     for i = #kmsg.backup, 1, -1 do
       local v = kmsg.backup[i]
+      sC(colors.blue)
+      write('[' .. i .. '] ')
       sC(colors.red)
       write('[' .. v.time .. ']')
       sC(colors.green)
@@ -39,6 +41,8 @@ local function printm(ind)
   else
     for i = ind, 1, -1 do
       local v = kmsg.backup[i]
+      sC(colors.blue)
+      write('[' .. i .. '] ')
       sC(colors.red)
       write('[' .. v.time .. ']')
       sC(colors.green)
