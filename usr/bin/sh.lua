@@ -23,7 +23,7 @@ THE SOFTWARE.
 ]]
 
 local dir, path, rp = '/','/:/usr/bin:/usr/sbin:/rom/programs','sh';
-local env = {}
+local env = {['DIR'] = dir}
 
 if term.isColor() then
 	path = path..":/rom/programs/advanced"
@@ -50,7 +50,11 @@ if http then
 	path = path..":/rom/programs/http"
 end
 
+env.PATH = path
+
 local shell = { aliases = {} }
+
+env.ALIAS = shell.aliases
 
 function shell.isAlias(file)
   return shell.aliases[file]

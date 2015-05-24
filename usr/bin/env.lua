@@ -3,7 +3,6 @@ The MIT License (MIT)
 
 Copyright (c) 2014-2015 the TARDIX team
 
-
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
 in the Software without restriction, including without limitation the rights
@@ -23,12 +22,18 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 ]]
 
--- Hello.
 function main(...)
-  if ... then
-    print('Hello, ', table.concat({...}, ' '), '!')
+  if not (#({...}) == 0) then
+    for k, v in ipairs({...}) do
+      local split = string.split(v, '=')
+      env[split[1]] = split[2]
+      print(v)
+    end
   else
-    print("Hello, World!")
+    if env then
+      for k, v in pairs(env) do
+        print(('%s=%s'):format(k, textutils.serialize(v)))
+      end
+    end
   end
-  return "hello"
 end
