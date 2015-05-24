@@ -17,3 +17,6 @@ usr/proc/
 proc/
 .notify-log
 var/
+example.com
+
+usr/local
