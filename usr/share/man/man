@@ -1,0 +1,62 @@
+MAN(1) - Manual Viewing Utility - MAN(1)
+
+NAME
+  man - an interface to the local manual pages
+
+SYNOPSIS
+  man [-h|-v] [section] page
+
+DESCRIPTION
+  man is the system's manual viewer. Each page
+  argument passed to man is normally the name of a
+  program, utility or function. The manual page of
+  the first argument is then passed and displayed.
+
+  The default is looking just in section one,
+  but this can be overriden by setting the
+  environment variable MAN_SEARCH_PATH.
+
+  A manual page consists of several sections.
+
+  Conventional  section  names  include  NAME,
+  SYNOPSIS,  CONFIGURATION, DESCRIPTION,  OPTIONS,
+  EXIT STATUS, RETURN VALUE, ERRORS, ENVIRONMENT,
+  FILES, VERSIONS, CONFORMING TO,  NOTES,  BUGS,
+  EXAMPLE,  AUTHORS,  and SEE ALSO.
+
+  The following conventions apply to the SYNOPSIS
+  section and can be used as a guide in other
+  sections.
+
+  normal text      type exactly as shown
+  <text>           replace with the appropriate
+  arguments.
+
+  [-abc]           any or all arguments within [ ]
+  are optional.
+  -a|-b            options delimited by | cannot
+  be used together.
+
+  argument ...     argument is repeatable.
+  [expression...]  entire expression within [ ] is
+  repeatable.
+
+EXAMPLES
+
+  man <ls>
+    Display manual text for ls.
+
+  man <1> <ls>
+    Display manual text for ls in section one.
+
+OVERVIEW
+  Many  options are available to man in order to
+  give as much flexibility as possible to the
+  user.  Changes can be made to the search path,
+  section  order,  output  processor,  and  other
+  behaviors and operations detailed below.
+
+  These options are passed as environment
+  variables. They are prefixed with MAN_, and
+  specify things such as the order of sections,
+  colors for using, and tabulation options.

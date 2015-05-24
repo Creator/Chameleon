@@ -78,4 +78,85 @@ function libinfo.fail(thing)
   libinfo.stop(false)
 end
 
+function libinfo.print(tOfLines)
+  for i = 1, #tOfLines do
+    local val = tOfLines[i]
+    if val.txtCol then
+      if term.isColor and term.isColor() then
+        term.setTextColor(val.txtCol)
+      end
+    else
+      term.setTextColor(colors.white)
+    end
+
+    if val.bgCol then
+      if term.isColor and term.isColor() then
+        term.setBackgroundColor(val.bgCol)
+      end
+    else
+      term.setBackgroundColor(colors.black)
+    end
+
+    if val.pos then
+      local cx, cy = term.getSize()
+      if val.pos.x and val.pos.y then
+        term.setCursorPos(val.pos.y, val.pos.x)
+      elseif val.pos.x then
+        term.setCursorPos(cy, val.pos.x)
+      elseif val.pos.y then
+        term.setCursorPos(val.pos.y, cx)
+      end
+    end
+
+    if val.text then
+      if i == #tOfLines then
+        print(val.text)
+      else
+        io.write(val.text)
+      end
+    end
+  end
+
+  term.setTextColor(colors.white)
+  term.setBackgroundColor(colors.black)
+end
+
+function libinfo.usage(name, desc, gen, opts)
+  local function keys(opts)
+    local ret = {}
+    for k, v in pairs(opts) do
+      table.insert(ret, '-' .. k)
+    end
+
+    return ret
+  end
+  local toPrint = {
+    { txtCol = colors.red, text = name},
+    { text = ' - '.. desc .. '\n'},
+    { text = '\tusage:\n'},
+    { txtCol = colors.red, text =  '\t\t' .. name},
+    { text = ' [' .. table.concat(keys(opts), '|') .. '] ' .. gen .. '\n'},
+  }
+  local i = 0
+
+  for k, v in pairs(opts) do
+    i = i + 1
+
+    table.insert(toPrint, {
+      txtCol = colors.orange, text = '\t\t-'.. k .. ': '
+    })
+    if i == table.size(opts) then
+      table.insert(toPrint, {
+        text = v
+      })
+    else
+      table.insert(toPrint, {
+        text = v .. '\n'
+      })
+    end
+  end
+
+  libinfo.print(toPrint)
+end
+
 return libinfo

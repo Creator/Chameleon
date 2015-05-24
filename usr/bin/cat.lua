@@ -59,13 +59,11 @@ end
 
 
 local function usag()
-  print('cat - read a file.\n'..
-    '\tusage:\n'..
-    '\tcat [-h|-v|-r] <file1[file2, ...]>\n'..
-    '\t\t-h: print this help\n'..
-    '\t\t-v: print the vesrion\n'..
-    '\t\t-r: print the file in reverse'
-  )
+  (run.require 'info').usage('cat', 'read a file (or in reverse)', '<file1[file2...]>', {
+    h = 'print this help information',
+    v = 'print version information',
+    r = 'read the file in reverse'
+  })
 end
 
 local function vers()

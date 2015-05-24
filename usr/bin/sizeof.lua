@@ -22,19 +22,34 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 ]]
 
+local function listAll(_path, _files)
+  local path = _path or ""
+  local files = _files or {}
+  if #path > 1 then table.insert(files, path) end
+  for _, file in ipairs(fs.list(path)) do
+    local path = fs.combine(path, file)
+    if fs.isDir(path) then
+      listAll(path, files)
+    else
+      table.insert(files, path)
+    end
+  end
+  return files
+end
+
 local function szo(d, s)
-  local size = 0
+  local size = 512
+
   if not fs.isDir(d) and fs.exists(d) then
     return fs.getSize(d)
   end
 
   if fs.isDir(d) then
-    local list = fs.list(d)
-    for k, v in pairs(list) do
-      if fs.isDir(v) then
-        szo(fs.combine(d, v), size)
-      else
-        size = size + fs.getSize(fs.combine(d, v))
+    local list = listAll(d)
+
+    for i = 1, #list do
+      if not fs.isDir(list[i]) then
+        size = size + fs.getSize(list[i])
       end
     end
   end
@@ -42,9 +57,42 @@ local function szo(d, s)
   return size
 end
 
-function main(arg1, ...)
-  local files = {arg1, ...}
+local function usag()
+  (run.require 'info').print({
+    { txtCol = colors.red, text = 'sizeof '},
+    { text = '- calculate size of a file or folder\n'},
+    { text = '\tusage:\n'},
+    { txtCol = colors.red, text = '\tsizeof '},
+    { text = '[-h|-v] <file1[file2...]>\n'},
+    { txtCol = colors.orange, text = '\t\t-h: '},
+    { text = 'get this help information\n'},
+    { txtCol = colors.orange, text = '\t\t-v: '},
+    { text = 'get version information.'}
+  })
+end
+
+local function vers()
+  print('sizeof version 1')
+end
+
+function main(...)
+  local files = {}
+
+  for opt, arg in (run.require 'posix').getopt('hv', ...) do
+    if opt == false then
+      if fs.exists(arg) and arg ~= ' ' then
+        table.insert(files, arg)
+      end
+    elseif opt == 'h' then usag() return
+    elseif opt == 'v' then vers() return end
+  end
+
   for k, v in ipairs(files) do
-    print(('%s: %dB'):format(v, szo((shell and shell.resolve(v) or v))))
+    if fs.exists(v) then
+      (run.require 'info').print({
+        { txtCol = colors.green, text = string.format('%s: %s', fs.isDir(v) and 'd' or 'f', v)},
+        { text = ' - '..tostring(szo(shell and shell.resolve(v) or v)) .. 'B'},
+      })
+    end
   end
 end

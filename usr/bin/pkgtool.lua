@@ -23,17 +23,17 @@ THE SOFTWARE.
 ]]
 
 
+local printFancy = (run.require 'libinfo').print;
+
 
 local function printh()
-  print('pkgtool - package management tool.\n'..
-    '\tusage:\n'..
-    '\tpkgtool [-h|-v|-B/M/P|-I] <file1[file2, ...]>\n'..
-    '\t\t-h: print this help\n'..
-    '\t\t-v: print the vesrion\n'..
-    '\t\t-B or -M or -P: build a package\n'..
-    '\t\t-I: install a package\n'..
-    '\t\t-R: remove a package'
-  )
+  (run.require 'info').usage('pkgtool', 'package management tool', '<file1[file2...]>', {
+    h = 'print this help information',
+    v = 'print version information',
+    I = 'install a package',
+    R = 'remove a package',
+    ['B/M/P'] = 'build a package for installation'
+  })
 end
 
 local function versio()
@@ -41,7 +41,11 @@ local function versio()
 end
 
 local function build(file)
-  print(':: Building package '.. file)
+  printFancy({
+    {txtCol = colors.green, text = '::'},
+    {text = ' Building package '},
+    {txtCol = colors.blue, text = file}
+  })
   local f = fs.open(file, 'r')
   file = textutils.unserialize(f.readAll())
   f.close()
@@ -49,7 +53,11 @@ local function build(file)
   local ret = {}
   if file.files then
     for i = 1, #file.files do
-      print('\t-> Generating file ' .. file.files[i].path)
+      printFancy({
+        {txtCol = colors.green, text = '\t-> '},
+        {text = 'Generating file '},
+        {txtCol = colors.blue, text = file.files[i].path}
+      });
       local data = http.get(file.files[i].url).readAll()
 
       table.insert(ret,{
@@ -63,15 +71,22 @@ local function build(file)
   else
     printError('Malformed package description file.')
   end
-  print('\t-> Writing file ' .. file.target or file .. '.lar');
+  printFancy({
+    {txtCol = colors.green, text = '\t-> '},
+    {text = 'Writing file '},
+    {txtCol = colors.blue, text = file.target or file .. '.lar'}
+  });
 
   (run.require 'lar').write(file.target or file .. '.lar', ret)
 
 end
 
 local function remove(file, targ)
-  print(':: Removing package ' .. file .. ' from ' .. targ);
-
+  printFancy({
+    {txtCol = colors.green, text = '::'},
+    {text = ' Removing package '},
+    {txtCol = colors.blue, text = file}
+  });
   if fs.exists(file) then
     (run.require 'lar').remlar(targ, file)
     if fs.exists(fs.combine('/var/pkgtool.cache/', file)) then
@@ -87,8 +102,11 @@ local function remove(file, targ)
 end
 
 local function install(file, targ)
-  print(':: Installing package ' .. file .. ' to ' .. targ)
-
+  printFancy({
+    {txtCol = colors.green, text = ':: '},
+    {text = 'Installing package '},
+    {txtCol = colors.blue, text = file}
+  });
   if not fs.isDir('/var/pkgtool.cache') then
     fs.makeDir('/var/pkgtool.cache')
   end
@@ -98,8 +116,10 @@ local function install(file, targ)
   end
 
   (run.require 'lar').unlar(targ, file)
-  print(':: Installation successful.')
-  print('\tThe package file was moved into the cache.')
+  printFancy({
+    {txtCol = colors.green, text = ':: '},
+    {text = 'Installation successful.'},
+  });  print('\tThe package file was moved into the cache.')
   io.write('\tWould you like to remove the source? [y/N]')
   local inp = read()
 

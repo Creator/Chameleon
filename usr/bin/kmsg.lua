@@ -55,7 +55,19 @@ local function printm(ind)
   end
 end
 
-function main(amt)
+function main(...)
+  local amt;
+
+  for opt, arg in (run.require 'posix').getopt('hvc:', ...) do
+    if opt == 'c' then amt = arg
+    elseif opt == 'h' then (run.require 'info').usage('kmsg', 'kernel messaging system', '', {
+      h = 'print this help information',
+      v = 'print version information',
+      c = 'amount of lines to read.'
+    }) return
+    elseif opt == 'v' then print('kmsg version 2') return end
+  end
+
   if amt then
     printm(amt)
   else

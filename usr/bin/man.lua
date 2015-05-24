@@ -23,31 +23,29 @@ THE SOFTWARE.
 ]]
 
 function main(...)
-  local args = {}
+  local man_path = string.split('usr/share/man:usr/local/share/man:/usr/etc/man.d:' .. (env and env.MAN_PATH or '/:'), ':')
+  local section, name;
 
   for opt, arg in (run.require 'posix').getopt('hv', ...) do
-    if opt == false then
-      if #arg >= 0 then
-        table.insert(args, arg)
-      end
+    if opt == false then name = arg
     elseif opt == 'h' then
-      (run.require 'info').usage('env', 'manipulate the environment', '<param1=value[param2=value...]>', {
+      (run.require 'info').usage('man', 'read manual pages', '[section] <name>', {
         h = 'print this help information',
         v = 'print version information'
       }) return
-    elseif opt == 'v' then print('env version 1') return end
+    elseif opt == 'v' then print('manual version 1') return end
   end
 
-  if not (#args == 0) then
-    for k, v in ipairs({...}) do
-      local split = string.split(v, '=')
-      env[split[1]] = split[2]
-      print(v)
-    end
-  else
-    if env then
-      for k, v in pairs(env) do
-        print(('%s=%s'):format(k, textutils.serialize(v)))
+  if name then
+    for i = 1, #man_path do
+      if fs.exists(fs.combine(man_path[i], name)) then
+        local data = fs.open(fs.combine(man_path[i], name), 'r')
+        local tabl = data.readAll()
+        data.close()
+
+        local x, y = term.getSize()
+
+        textutils.pagedPrint(tabl, (env and env.MAN_TABSIZE) or y)
       end
     end
   end
