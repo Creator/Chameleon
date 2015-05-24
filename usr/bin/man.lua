@@ -46,6 +46,38 @@ function main(...)
         local x, y = term.getSize()
 
         textutils.pagedPrint(tabl, (env and env.MAN_TABSIZE) or y)
+      elseif fs.exists(fs.combine(fs.combine(man_path[i], 'programs'), name)) then
+        local data = fs.open(fs.combine(fs.combine(man_path[i], 'programs'), name), 'r')
+        local tabl = data.readAll()
+        data.close()
+
+        local x, y = term.getSize()
+
+        textutils.pagedPrint(tabl, (env and env.MAN_TABSIZE) or y)
+      elseif fs.exists(fs.combine(fs.combine(man_path[i], 'libraries'), name)) then
+        local data = fs.open(fs.combine(fs.combine(man_path[i], 'libraries'), name), 'r')
+        local tabl = data.readAll()
+        data.close()
+
+        local x, y = term.getSize()
+
+        textutils.pagedPrint(tabl, (env and env.MAN_TABSIZE) or y)
+      elseif fs.exists(fs.combine(fs.combine(man_path[i], 'utilities'), name)) then
+        local data = fs.open(fs.combine(fs.combine(man_path[i], 'utilities'), name), 'r')
+        local tabl = data.readAll()
+        data.close()
+
+        local x, y = term.getSize()
+
+        textutils.pagedPrint(tabl, (env and env.MAN_TABSIZE) or y)
+      elseif fs.exists(fs.combine(fs.combine(man_path[i], 'sysfns'), name)) then
+        local data = fs.open(fs.combine(fs.combine(man_path[i], 'sysfns'), name), 'r')
+        local tabl = data.readAll()
+        data.close()
+
+        local x, y = term.getSize()
+
+        textutils.pagedPrint(tabl, (env and env.MAN_TABSIZE) or y)
       end
     end
   end
