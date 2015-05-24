@@ -23,49 +23,49 @@ THE SOFTWARE.
 ]]
 
 function main(...)
-  local repo;
-  local dire;
-  local branch = 'master';
+  local url;
+  local out;
 
-  for opt, arg in getopt('hvb:s:', ...)
+  for opt, arg in (run.require 'posix').getopt('hvO:', ...) do
     if opt == false then
-      if not repo and #arg ~= 0 then
-        repo = arg
-      elseif repo and not dire and #arg ~= 0 then
-        dire = master
-      end
+      url = arg
     elseif opt == 'h' then
-      (run.require 'libinfo').usage('github', 'download a repository from github', '<user/repo> <path>', {
+      (run.require 'info').usage('curl', 'cat url', '<url> [-O file]', {
         h = 'print this usage information',
         v = 'print version information',
-        b = 'use the specified branch'
+        O = 'write the downloaded data to a file.'
       })
-      return
     elseif opt == 'v' then
-      print('github downloader version 1')
-      return
-    elseif opt == 'b' and not branch then
-      branch = arg
-    elseif opt == 's' and not branch then
-      branch = arg
+      print('cat url version 1')
+    elseif opt == 'O' then
+      out = arg
     end
   end
 
+  if out and url then
+    local file = fs.open(out, 'w')
+    local han = http.get(url)
 
-  local data = (run.require 'libjson'):decode(http.format(
-    textutils.urlEncode(('https://api.github.com/repos/%s/trees/%s?recursive=1'):format(repo, branch))
-  ))
-
-  if data.tree then
-    for k, v in pairs(data.tree) do
-      if v.type == 'blob' then
-        local path = v.path
-        local url = textutils.urlEncode(('https://raw.githubusercontent.com/%s/%s/%s'):format(repo, branch, path))
-        local file = fs.open(fs.combine(dire, path), 'w')
-
-        file.writeLine(http.get(url).readAll())
-        file.close()
-      end
+    if not han then
+      printError('failed to get ' .. url)
+      return
     end
+
+    file.writeLine(han.readAll())
+    file.close()
+  elseif url then
+    local han = http.get(url)
+
+    if not han then
+      printError('failed to get ' .. url)
+      return
+    end
+    print(han.readAll())
+  else
+    (run.require 'info').usage('curl', 'cat url', '<url> [-O file]', {
+      h = 'print this usage information',
+      v = 'print version information',
+      O = 'write the downloaded data to a file.'
+    })
   end
 end
