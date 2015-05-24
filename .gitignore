@@ -16,3 +16,4 @@ usr/dev/
 usr/proc/
 proc/
 .notify-log
+var/

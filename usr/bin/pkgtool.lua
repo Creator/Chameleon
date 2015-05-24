@@ -41,6 +41,7 @@ local function versio()
 end
 
 local function build(file)
+  print(':: Building package '.. file)
   local f = fs.open(file, 'r')
   file = textutils.unserialize(f.readAll())
   f.close()
@@ -48,7 +49,7 @@ local function build(file)
   local ret = {}
   if file.files then
     for i = 1, #file.files do
-
+      print('\t-> Generating file ' .. file.files[i].path)
       local data = http.get(file.files[i].url).readAll()
 
       table.insert(ret,{
@@ -62,17 +63,49 @@ local function build(file)
   else
     printError('Malformed package description file.')
   end
+  print('\t-> Writing file ' .. file.target or file .. '.lar');
 
-  (run.require 'lar').write(file.target and file.target or file .. '.lar', ret)
+  (run.require 'lar').write(file.target or file .. '.lar', ret)
 
 end
 
-local function remove(file)
-  (run.require 'lar').remlar('/usr/local', file)
+local function remove(file, targ)
+  print(':: Removing package ' .. file .. ' from ' .. targ);
+
+  if fs.exists(file) then
+    (run.require 'lar').remlar(targ, file)
+    if fs.exists(fs.combine('/var/pkgtool.cache/', file)) then
+      fs.delete(fs.combine('/var/pkgtool.cache/', file))
+    end
+  elseif fs.exists(fs.combine('/var/pkgtool.cache/', file)) then
+    (run.require 'lar').remlar(targ, fs.combine('/var/pkgtool.cache', file))
+    fs.delete(fs.combine('/var/pkgtool.cache/', file))
+  else
+    printError('unknown package ' .. file)
+  end
+
 end
 
-local function install(file)
-  (run.require 'lar').unlar('/usr/local', file)
+local function install(file, targ)
+  print(':: Installing package ' .. file .. ' to ' .. targ)
+
+  if not fs.isDir('/var/pkgtool.cache') then
+    fs.makeDir('/var/pkgtool.cache')
+  end
+
+  if not fs.exists(fs.combine('/var/pkgtool.cache/', file)) then
+    fs.copy(file, fs.combine('/var/pkgtool.cache/', file));
+  end
+
+  (run.require 'lar').unlar(targ, file)
+  print(':: Installation successful.')
+  print('\tThe package file was moved into the cache.')
+  io.write('\tWould you like to remove the source? [y/N]')
+  local inp = read()
+
+  if inp:lower() == 'y' then
+    fs.delete(file)
+  end
 end
 
 function main(...)
@@ -92,9 +125,14 @@ function main(...)
     elseif opt == 'v' then op = versio break
     elseif opt == '?' then printError('Missing required argument.') return end
   end
-
+  local targ = '/usr/local'
+  if env then
+    if env.PKGTOOL_TARGET then
+      targ = env.PKGTOOL_TARGET
+    end
+  end
   if op then
-    op(target and shell.resolve(target) or 'no target required')
+    op(target and shell.resolve(target) or 'no target required', targ)
   else
     printh()
   end
