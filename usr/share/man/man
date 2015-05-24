@@ -1,4 +1,4 @@
-MAN(1) - Manual Viewing Utility - MAN(1)
+MAN - Manual Viewing Utility - MAN
 
 NAME
   man - an interface to the local manual pages
@@ -38,7 +38,7 @@ DESCRIPTION
   be used together.
 
   argument ...     argument is repeatable.
-  [expression...]  entire expression within [ ] is
+  [expression]...  entire expression within [ ] is
   repeatable.
 
 EXAMPLES
@@ -46,8 +46,8 @@ EXAMPLES
   man <ls>
     Display manual text for ls.
 
-  man <1> <ls>
-    Display manual text for ls in section one.
+  man programs/ls
+    Display manual text for ls in section "programs".
 
 OVERVIEW
   Many  options are available to man in order to
@@ -60,3 +60,8 @@ OVERVIEW
   variables. They are prefixed with MAN_, and
   specify things such as the order of sections,
   colors for using, and tabulation options.
+
+AUTHORS
+  Matheus de Alcantara
+    <matheus.de.alcantara@gmail.com>
+    @DemHydraz

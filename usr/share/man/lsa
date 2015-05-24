@@ -1,0 +1,43 @@
+LSA - List All Files - LSA
+
+NAME
+  lsa - list all files in a directory
+
+SYNOPSIS
+  lsa [-h|-v] [file]...
+
+DESCRIPTION
+
+  lsa is the preffered utility for viewing files
+  in the file system. It differentiates between
+  directories, files and read-only entries.
+
+  Depending on the type of entry being listed,
+  the color of the entry changes. files have a
+  green color, directories have a blue color and
+  read-only entries have a red color.
+
+  lsa does not have any required arguments. The
+  arguments you may pass represent a list of
+  directories to list. If no arguments are passed,
+  the current working directory as represented by
+  shell.dir() is used.
+
+  Additionally, a single character representing
+  the type of entry is displayed. It may be a d or
+  an f, if the entry is a directory or a file,
+  respectively. The file of the entry is also
+  displayed, in bytes.
+
+OVERVIEW
+  The command line option -h prints out the usage
+  of the lsa command, as determined by the
+  standard Chameleon usage format.
+
+  The command line option -v prints out the
+  version of lsa.
+
+AUTHORS
+  Matheus de Alcantara
+    <matheus.de.alcantara@gmail.com>
+    @DemHydraz

@@ -44,6 +44,40 @@ local function szo(d, s)
   return size
 end
 
+local function listAll(_path, _files)
+  local path = _path or ""
+  local files = _files or {}
+  if #path > 1 then table.insert(files, path) end
+  for _, file in ipairs(fs.list(path)) do
+    local path = fs.combine(path, file)
+    if fs.isDir(path) then
+      listAll(path, files)
+    else
+      table.insert(files, path)
+    end
+  end
+  return files
+end
+
+local function szo(d, s)
+  local size = 512
+
+  if not fs.isDir(d) and fs.exists(d) then
+    return fs.getSize(d)
+  end
+
+  if fs.isDir(d) then
+    local list = listAll(d)
+
+    for i = 1, #list do
+      if not fs.isDir(list[i]) then
+        size = size + fs.getSize(list[i])
+      end
+    end
+  end
+
+  return size
+end
 
 local function list(dir, rec)
   if fs.isDir(dir) then
@@ -59,7 +93,7 @@ local function list(dir, rec)
     end)
 
     for k, v in pairs(ls) do
-      write(('%s: '):format(fs.isDir(v) and 'd' or 'f'))
+      write(('%s - %sB: '):format(fs.isDir(v) and 'd' or 'f', tostring(szo(v))))
       if fs.isDir(v) and not fs.isReadOnly(v) then
         if term.isColor and term.isColor() then
           term.setTextColor(env and env.LS_COLORS and env.LS_COLORS.DIR or colors.blue)
