@@ -195,7 +195,10 @@ function main()
     table.insert(history, inp )
     local f, p = shell.parse(inp)
 
-    shell.run(f, unpack(p))
+    local ok, err = pcall(shell.run, f, unpack(p))
+		if not ok then
+			printError('error executing ' .. f .. ': ' .. err)
+		end
   end
 end
 
