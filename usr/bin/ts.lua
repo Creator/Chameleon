@@ -167,19 +167,9 @@ end
 
 function env.loadpack(pack)
   if fs.exists('/usr/lib/ts/'..pack..'-ts.lua') then
-    env[pack] = {}
-    local ret = run.dailin.link('/usr/lib/ts/'..pack..'-ts.lua')
-    for k, v in pairs(ret) do
-      env[pack][k] = v
-    end
-    return ret
+    return run.dailin.link('/usr/lib/ts/'..pack..'-ts.lua')
   elseif fs.exists('/usr/local/lib/ts/'..pack..'-ts.lua') then
-    env[pack] = {}
-    local ret = run.dailin.link('/usr/local/lib/ts/'..pack..'-ts.lua')
-    for k, v in pairs(ret) do
-      env[pack][k] = v
-    end
-    return ret
+    return run.dailin.link('/usr/local/lib/ts/'..pack..'-ts.lua')
   else
     printError('unknown pack ' .. pack)
   end

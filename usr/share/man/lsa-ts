@@ -1,0 +1,45 @@
+clear()
+
+line():colorcenter {black, orange} 'LSA'
+
+line() : colored {black, orange} 'NAME\n\n'
+  : print '\tlsa - list all files'
+
+line() : colored {black, orange} 'DESCRIPTION\n\n'
+  : print 'lsa is the preffered utility for viewing files'
+  : print 'in the file system. It differentiates between'
+  : print 'directories, files and read-only entries.'
+
+  : print 'Depending on the type of entry being listed,'
+  : print 'the color of the entry changes. files have a'
+  : print 'green color, directories have a blue color and'
+  : print 'read-only entries have a red color.'
+wait()
+clear()
+
+line() : colored {black, white} 'lsa does not have any required arguments. The'
+  : print 'arguments you may pass represent a list of'
+  : print 'directories to list. If no arguments are passed,'
+  : print 'the current working directory as represented by'
+  : print 'shell.dir() is used.\n'
+
+wait()
+clear()
+
+line() : colored {black, white} 'Additionally, a single character representing '
+  : print 'the type of entry is displayed. It may be a d or'
+  : print 'an f, if the entry is a directory or a file,'
+  : print 'respectively. The file of the entry is also'
+  : print 'displayed, in bytes.'
+wait()
+clear()
+
+line() : colored {black, orange} 'OVERVIEW\n\n'
+  :colored {black, white} 'The command line option -h prints out the usage '
+  :print 'of the lsa command, as determined by the'
+  :print 'standard Chameleon usage format.'
+  :print '\nThe command line option -v prints out the'
+  :print 'version of lsa.'
+
+wait()
+exit()
