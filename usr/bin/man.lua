@@ -36,14 +36,20 @@ function main(...)
         T = 'try to render with TS.'
       }) return
     elseif opt == 'v' then print('manual version 1') return
-    elseif opt == 'T' then ts = true
+    elseif opt == 'T' then ts = true end
   end
-
+  if not name then
+    (run.require 'info').usage('man', 'read manual pages', '[section] <name>', {
+      h = 'print this help information',
+      v = 'print version information',
+      T = 'try to render with TS.'
+    }) return
+  end
   if name then
     for i = 1, #man_path do
       if fs.exists(fs.combine(man_path[i], name)) then
         if ts then
-          libts.run(fs.combine(fs.combine(man_path[i], 'libraries'), name))
+          libts.run(fs.combine(fs.combine(man_path[i], ''), name))
           return
         end
         local data = fs.open(fs.combine(man_path[i], name), 'r')
@@ -56,7 +62,7 @@ function main(...)
         return
       elseif fs.exists(fs.combine(fs.combine(man_path[i], 'programs'), name)) then
         if ts then
-          libts.run(fs.combine(fs.combine(man_path[i], 'libraries'), name))
+          libts.run(fs.combine(fs.combine(man_path[i], 'programs'), name))
           return
         end
         local data = fs.open(fs.combine(fs.combine(man_path[i], 'programs'), name), 'r')
@@ -82,7 +88,7 @@ function main(...)
         return
       elseif fs.exists(fs.combine(fs.combine(man_path[i], 'utilities'), name)) then
         if ts then
-          libts.run(fs.combine(fs.combine(man_path[i], 'libraries'), name))
+          libts.run(fs.combine(fs.combine(man_path[i], 'utilities'), name))
           return
         end
         local data = fs.open(fs.combine(fs.combine(man_path[i], 'utilities'), name), 'r')
@@ -95,7 +101,7 @@ function main(...)
         return
       elseif fs.exists(fs.combine(fs.combine(man_path[i], 'sysfns'), name)) then
         if ts then
-          libts.run(fs.combine(fs.combine(man_path[i], 'libraries'), name))
+          libts.run(fs.combine(fs.combine(man_path[i], 'sysfns'), name))
           return
         end
         local data = fs.open(fs.combine(fs.combine(man_path[i], 'sysfns'), name), 'r')
