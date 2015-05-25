@@ -72,6 +72,54 @@ function main()
       end
     end
   end
+
+  if fs.exists('/usr/local/etc/init.d') then
+    local ls = fs.list('/usr/local/etc/init.d')
+    table.sort(ls)
+    for k, v in ipairs(ls) do
+      if not fs.isDir(v) then
+        info.begin('Starting ' .. v:gsub('.lua', '') .. '...')
+        local ret = run.spawn(fs.combine('/usr/etc/init.d', v))
+        info.stop(ret or true)
+      end
+    end
+  end
+
+  if fs.exists('/usr/etc/inittab') then
+    local file = fs.open('/usr/etc/inittab', 'r')
+    local data = (file and textutils.unserialize(file.readAll()) or {})
+    for i = 1, #data do
+      local val = data[i]
+      if val.daemons then
+        for j = 1, #val.daemons do
+          if not fs.isDir(val.daemons[j]) then
+            info.begin('Starting ' .. val.daemons[j]:gsub('.lua', '') .. '...')
+            local ret = run.spawn(val.daemons[j])
+            info.stop(ret or true)
+          end
+        end
+      end
+    end
+  end
+
+
+  if fs.exists('/usr/local/etc/inittab') then
+    local file = fs.open('/usr/local/etc/inittab', 'r')
+    local data = (file and textutils.unserialize(file.readAll()) or {})
+    for i = 1, #data do
+      local val = data[i]
+      if val.daemons then
+        for j = 1, #val.daemons do
+          if not fs.isDir(val.daemons[j]) then
+            info.begin('Starting ' .. val.daemons[j]:gsub('.lua', '') .. '...')
+            local ret = run.spawn(val.daemons[j])
+            info.stop(ret or true)
+          end
+        end
+      end
+    end
+  end
+
   local envs = {}
 
   function getenv(var)
