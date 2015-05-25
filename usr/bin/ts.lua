@@ -185,8 +185,9 @@ for k, v in pairs(colours) do
   env[k] = v
 end
 
+local ret = {}
 
-function main(...)
+function ret.main(...)
   local name;
 
   for opt, arg in (run.require 'posix').getopt('hv', ...) do
@@ -213,5 +214,17 @@ function main(...)
       v = 'print version information'
     }) return
   end
-
 end
+
+
+function ret.run(name)
+  local ok, err = loadfile(name)
+  if not ok then
+    printError('error loading typesetter file ' .. name .. ':\n\t' .. err)
+    return
+  end
+  setfenv(ok, env)
+  ok()
+end
+
+return ret
