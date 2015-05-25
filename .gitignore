@@ -20,3 +20,4 @@ var/
 example.com
 
 usr/local
+!var/test.ts
