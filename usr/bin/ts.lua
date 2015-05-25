@@ -146,9 +146,9 @@ function env.wait()
   local w, h = term.getSize()
   local x, y = term.getCursorPos()
   x = math.max(math.floor((w / 2) - (#('Press any key to continue.') / 2)), 0)
-  term.setCursorPos(x, h-1)
+  term.setCursorPos(x, h)
 
-  print('Press any key to continue.')
+  write('Press any key to continue.')
 
   coroutine.yield('key')
 end

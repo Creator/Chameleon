@@ -21,3 +21,4 @@ example.com
 
 usr/local
 !var/test.ts
+!var/docs.ts
