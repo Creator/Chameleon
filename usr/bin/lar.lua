@@ -107,8 +107,8 @@ function main(...)
     (run.require 'info').print({
       { text = 'Total size of archive '},
       { txtCol = colors.orange, text = file},
-      { txtCol = colors.red, text = '\n\tfiles: ' .. size / 1000 .. 'KB' .. '\n\tarchive file: ' .. fs.getSize(file) / 1000 .. 'KB'},
-      { txtCol = colors.red, text = '\n\tpadding: ' .. fs.getSize(file) / 1000 - size / 1000 .. 'KB'}
+      { txtCol = colors.red, text = '\n\tfiles: ' .. math.floor(size / 1024) .. 'KiB' .. '\n\tarchive file: ' .. math.floor(fs.getSize(file) / 1024) .. 'KiB'},
+      { txtCol = colors.red, text = '\n\tpadding: ' .. math.floor(fs.getSize(file) - size / 1024) .. 'KiB'}
     })
 
   elseif not file then
