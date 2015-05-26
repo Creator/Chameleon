@@ -63,15 +63,17 @@ local function build(file)
         {txtCol = colors.blue, text = file.files[i].path}
       });
       local data = http.get(file.files[i].url).readAll()
-      if file.files[i].sha256 then
-        if not (run.require 'hash').sha256(data) == file.files[i].sha256 then
-          printError('Failed to download ' .. file.files[i].url)
-          return false
-        elseif not (run.require 'hash').crc32(data) == file.files[i].crc32 then
-          printError('Failed to download ' .. file.files[i].url)
-          return false
-        end
+
+
+      local libhash = (run.require 'hash')
+      if file.files[i].sha256 and (not file.files[i].sha256 == libhash.sha256(data)) then
+        printError('failed to download ' .. file.files[i].url)
+      elseif file.files[i].crc32 and (not file.files[i].crc32 == libhash.crc32(data)) then
+        printError('failed to download ' .. file.files[i].url)
+      elseif file.files[i].fcs16 and (not file.files[i].fcs16 == libhash.fcs16(data)) then
+        printError('failed to download ' .. file.files[i].url)
       end
+
       table.insert(ret,{
         ['data'] = data,
         ['meta'] = {
