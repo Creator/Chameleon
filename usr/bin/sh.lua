@@ -84,7 +84,8 @@ function shell.resolveP(file)
     end
   end
 
-  printError('failed to find file')
+  --printError('failed to find file')
+	return false
 end
 
 function shell.resolve(_sPath)
@@ -199,7 +200,7 @@ function main()
 		if not ok then
 			printError('error executing ' .. f .. ': ' .. _)
 		end
-		env._LAST_ = val
+		env.LAST = (shell.resolveP(f) == false and {false, 'program not found'} or {true, value})
   end
 end
 
