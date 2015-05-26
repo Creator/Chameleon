@@ -29,18 +29,22 @@ function main(...)
   local hash = (run.require 'hash')
   local algo;
 
-  for opt, arg in (run.require 'posix').getopt('hvFA:', ...) do
+  local outp;
+
+  for opt, arg in (run.require 'posix').getopt('hvFA:O:', ...) do
     if opt == false and #arg ~= 0 then
       table.insert(args, arg)
     elseif opt == 'F' then isfi = true
-    elseif opt == 'h' then (run.require 'info').usage('sha', 'calculate secure hashing algorithm 256 sum', '-F <file[file]...>/ <string[string]...>', {
+    elseif opt == 'h' then (run.require 'info').usage('hash', 'calculate secure hashing algorithm 256 sum', '-F <file[file]...>/ <string[string]...>', {
       h = 'print help',
       v = 'print version',
       F = 'toggle file mode',
-      A = 'specify hashing algorithm.'
+      A = 'specify hashing algorithm.',
+      O = 'write to file'
     }) return
     elseif opt == 'v' then print('sha256 version 1') return
-    elseif opt == 'A' then algo = arg end
+    elseif opt == 'A' then algo = arg
+    elseif opt == 'O' then outp = arg end
   end
 
   if not algo then
@@ -54,22 +58,45 @@ function main(...)
     end
   end
 
+  if outp then
+    fs.delete(outp)
+  end
   if isfi then
     for i = 1, #args do
       if fs.exists(shell.resolve(args[i])) and not fs.isDir(shell.resolve(args[i])) then
         local x = fs.open(shell.resolve(args[i]), 'r')
-        print(algo .. ' hash of: ' .. shell.resolve(args[i]) == '/' and '/' or '/' .. shell.resolve(args[i]).. ': ' .. hash(x.readAll()))
+        print(shell.resolve(args[i]) == '/' and '/' or '/' .. shell.resolve(args[i]).. ': ' .. hash(x.readAll()))
+
+        if outp then
+          local han = fs.open(shell.resolve(outp), fs.exists(shell.resolve(outp)) and 'a' or 'w')
+          han.writeLine(algo .. ' hash of ' .. shell.resolve(args[i]) == '/' and '/' or '/' .. shell.resolve(args[i]).. ': ' .. hash(x.readAll()))
+          han.close()
+        end
         x.close()
       elseif fs.isDir(shell.resolve(args[i])) then
-        print(algo .. ' hash of: ' .. shell.resolve(args[i]) == '/' and '/' or '/' .. shell.resolve(args[i]) .. ': is a directory.')
+        print(shell.resolve(args[i]) == '/' and '/' or '/' .. shell.resolve(args[i]) .. ': is a directory.')
       elseif not fs.exists(shell.resolve(args[i])) then
-        print(algo .. ' hash of: ' .. shell.resolve(args[i]) == '/' and '/' or '/' .. shell.resolve(args[i])  .. ': does not exist.')
+        print(shell.resolve(args[i]) == '/' and '/' or '/' .. shell.resolve(args[i])  .. ': does not exist.')
+      end
+    end
+  elseif #args ~= 0 then
+    for i = 1, #args do
+      print(args[i] .. ': ' .. hash(args[i]))
+      if outp then
+        local han = fs.open(shell.resolve(outp), fs.exists(shell.resolve(outp)) and 'a' or 'w')
+        han.writeLine(args[1] .. ': ' .. hash(args[i]))
+        han.close()
       end
     end
   else
-    for i = 1, #args do
-      print(algo .. ' hash of: ' .. (args[i]) .. ': ' .. hash(args[i]))
-    end
+    (run.require 'info').usage('hash', 'calculate secure hashing algorithm 256 sum', '-F <file[file]...>/ <string[string]...>', {
+      h = 'print help',
+      v = 'print version',
+      F = 'toggle file mode',
+      A = 'specify hashing algorithm.',
+      O = 'write to file'
+    })
+    return false
   end
 
   return true

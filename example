@@ -1,8 +1,8 @@
 {
   files = {
      {
-        url = 'http://example.com',
-        path = 'bin/example'
+        url = 'http://pastebin.com/raw.php?i=4v85T9Bj',
+        path = 'bin/example',
      }
    },
    target = 'example.com'

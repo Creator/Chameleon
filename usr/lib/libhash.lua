@@ -354,7 +354,7 @@ function fcs16.hash(str) -- Returns FCS16 Hash of @str
     local l=string.len(str)
     local uFcs16 = 65535
     for i = 1,l do
-        uFcs16 = bit.bxor(bit.brshift(uFcs16,8), fcs16["table"][bit.band(bit.bxor(uFcs16, string.byte(str,i)), 255)])
+      uFcs16 = bit.bxor(bit.brshift(uFcs16,8), fcs16["table"][bit.band(bit.bxor(uFcs16, string.byte(str,i)), 255)])
     end
     return  bit.bxor(uFcs16, 65535)
 end

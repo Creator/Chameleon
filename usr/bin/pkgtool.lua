@@ -66,12 +66,27 @@ local function build(file)
 
 
       local libhash = (run.require 'hash')
-      if file.files[i].sha256 and (not file.files[i].sha256 == libhash.sha256(data)) then
-        printError('failed to download ' .. file.files[i].url)
-      elseif file.files[i].crc32 and (not file.files[i].crc32 == libhash.crc32(data)) then
-        printError('failed to download ' .. file.files[i].url)
-      elseif file.files[i].fcs16 and (not file.files[i].fcs16 == libhash.fcs16(data)) then
-        printError('failed to download ' .. file.files[i].url)
+      if file.files[i].sha256 and file.files[i].sha256 ~= libhash.sha256(data) then
+        printFancy({
+          {txtCol = colors.green, text = '\t-> '},
+          {txtCol = colors.red, text = 'Failed downloading file '},
+          {txtCol = colors.blue, text = file.files[i].path}
+        });
+        return
+      elseif file.files[i].crc32 and file.files[i].crc32 ~= libhash.crc32(data) then
+        printFancy({
+          {txtCol = colors.green, text = '\t-> '},
+          {txtCol = colors.red, text = 'Failed downloading file '},
+          {txtCol = colors.blue, text = file.files[i].path}
+        });
+        return
+      elseif file.files[i].fcs16 and  file.files[i].fcs16 ~= libhash.fcs16(data) then
+        printFancy({
+          {txtCol = colors.green, text = '\t-> '},
+          {txtCol = colors.red, text = 'Failed downloading file '},
+          {txtCol = colors.blue, text = file.files[i].path}
+        });
+        return
       end
 
       table.insert(ret,{
