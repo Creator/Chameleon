@@ -31,7 +31,7 @@ function main(...)
 
   local outp;
 
-  for opt, arg in (run.require 'posix').getopt('hvFA:O:', ...) do
+  for opt, arg in (run.require 'posix').getopt('hvFA:O:C', ...) do
     if opt == false and #arg ~= 0 then
       table.insert(args, arg)
     elseif opt == 'F' then isfi = true
@@ -40,11 +40,146 @@ function main(...)
       v = 'print version',
       F = 'toggle file mode',
       A = 'specify hashing algorithm.',
-      O = 'write to file'
+      O = 'write to file',
+      C = 'check that everything is OK',
     }) return
     elseif opt == 'v' then print('sha256 version 1') return
     elseif opt == 'A' then algo = arg
-    elseif opt == 'O' then outp = arg end
+    elseif opt == 'O' then outp = arg
+    elseif opt == 'C' then
+
+      local printFancy = (run.require 'info').print
+      printFancy({
+        {txtCol = colors.green, text = '->'},
+        {text = ' Checking algorithm '},
+        {txtCol = colors.blue, text = 'sha256'}
+      })
+      local sharesults = {}
+
+      for i = 1, 5 do
+        print('\t\t-> Test: ' .. i)
+        print('\t\t\t-> Generating ' .. 20*i .. ' chars of random data.')
+
+        local data = ('xyxy'):randomize():rep(20*i)
+
+        local p1, p2;
+        p1 = hash.sha256(data)
+        print('\t\t\t-> First pass hash: ' .. p1)
+        p2 = hash.sha256(data)
+        print('\t\t\t-> Second pass hash: ' .. p2)
+
+        print('\t-> ' .. (p1 == p2 and 'OK' or 'Failed to verify sha256 workingness'))
+        table.insert(sharesults, p1 == p2)
+      end
+      local shaoks, shafails = 0, 0;
+
+      for i = 1, #sharesults do
+        if sharesults[i] == true then shaoks = shaoks + 1
+        else shafails = shafails + 1 end
+      end
+
+      printFancy({
+        {txtCol = colors.green, text = '->'},
+        {text = ' Checking algorithm '},
+        {txtCol = colors.blue, text = 'crc32'}
+      })
+
+      local crcresults = {}
+
+      for i = 1, 5 do
+        print('\t\t-> Test: ' .. i)
+        print('\t\t\t-> Generating ' .. 20*i .. ' chars of random data.')
+
+        local data = ('xyxy'):randomize():rep(20*i)
+
+        local p1, p2;
+        p1 = hash.crc32(data)
+        print('\t\t\t-> First pass hash: ' .. p1)
+        p2 = hash.crc32(data)
+        print('\t\t\t-> Second pass hash: ' .. p2)
+
+        print('\t-> ' .. (p1 == p2 and 'OK' or 'Failed to verify sha256 workingness'))
+        table.insert(crcresults, p1 == p2)
+      end
+      local crcoks, crcfails = 0, 0;
+
+      for i = 1, #crcresults do
+        if crcresults[i] == true then crcoks = crcoks + 1
+        else crcfails = crcfails + 1 end
+      end
+
+      printFancy({
+        {txtCol = colors.green, text = '->'},
+        {text = ' Checking algorithm '},
+        {txtCol = colors.blue, text = 'crc32'}
+      })
+
+      local fcsresults = {}
+
+      for i = 1, 5 do
+        print('\t\t-> Test: ' .. i)
+        print('\t\t\t-> Generating ' .. 20*i .. ' chars of random data.')
+
+        local data = ('xyxy'):randomize():rep(20*i)
+
+        local p1, p2;
+        p1 = hash.fcs16(data)
+        print('\t\t\t-> First pass hash: ' .. p1)
+        p2 = hash.fcs16(data)
+        print('\t\t\t-> Second pass hash: ' .. p2)
+
+        print('\t-> ' .. (p1 == p2 and 'OK' or 'Failed to verify fcs15 workingness'))
+        table.insert(fcsresults, p1 == p2)
+      end
+
+      local fcsoks, fcsfails = 0, 0;
+
+      for i = 1, #fcsresults do
+        if fcsresults[i] == true then fcsoks = fcsoks + 1
+        else fcsfails = fcsfails + 1 end
+      end
+
+      printFancy({
+        {txtCol = colors.green, text = '->'},
+        {text = ' Checking algorithm '},
+        {txtCol = colors.blue, text = 'message digest 5'}
+      })
+
+      local md5results = {}
+
+      for i = 1, 5 do
+        print('\t\t-> Test: ' .. i)
+        print('\t\t\t-> Generating ' .. 20*i .. ' chars of random data.')
+
+        local data = ('xyxy'):randomize():rep(20*i)
+
+        local p1, p2;
+        p1 = hash.md5(data)
+        print('\t\t\t-> First pass hash: ' .. p1)
+        p2 = hash.md5(data)
+        print('\t\t\t-> Second pass hash: ' .. p2)
+
+        print('\t-> ' .. (p1 == p2 and 'OK' or 'Failed to verify md5 workingness'))
+        table.insert(md5results, p1 == p2)
+      end
+
+      local md5oks, md5fails = 0, 0;
+
+      for i = 1, #md5results do
+        if md5results[i] == true then md5oks = md5oks + 1
+        else md5fails = md5fails + 1 end
+      end
+
+      print('Final results:')
+      print('\t\t', shaoks + fcsoks + crcoks + md5oks .. ' OKs.')
+      print('\t\t', shafails + fcsfails + crcfails + md5fails .. ' fails.')
+      if shaoks + fcsoks + crcoks + md5oks == 20 and shafails + fcsfails + crcfails + md5fails == 0 then
+        print('Everything\'s OK.')
+      else
+        print('Something went wrong!')
+      end
+      return
+    end
   end
 
   if not algo then
@@ -94,7 +229,8 @@ function main(...)
       v = 'print version',
       F = 'toggle file mode',
       A = 'specify hashing algorithm.',
-      O = 'write to file'
+      O = 'write to file',
+      C = 'check that everything is OK',
     })
     return false
   end
