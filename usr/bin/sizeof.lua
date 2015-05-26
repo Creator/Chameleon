@@ -39,11 +39,9 @@ end
 
 local function szo(d, s)
   local size = 512
-
   if not fs.isDir(d) and fs.exists(d) then
     return fs.getSize(d)
   end
-
   if fs.isDir(d) then
     local list = listAll(d)
 
@@ -91,7 +89,7 @@ function main(...)
     if fs.exists(v) then
       (run.require 'info').print({
         { txtCol = colors.green, text = string.format('%s: %s', fs.isDir(v) and 'd' or 'f', v)},
-        { text = ' - '..tostring(szo(shell and shell.resolve(v) or v)) .. 'B'},
+        { text = ' - '..tostring(szo(v)) .. 'B'},
       })
     end
   end
