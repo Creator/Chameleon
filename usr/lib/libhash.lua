@@ -365,8 +365,8 @@ local hashlib = {
   ['fcs16'] = fcs16.hash,
 }
 
-function hashlib.hash (str)
-	local pref = (getfenv(2).env and getfenv(2).env.PREFFERED_HASH or 'sha256')
+function hashlib.hash(str, algo)
+	local pref = (getfenv(2).env and getfenv(2).env.PREFFERED_HASH or algo or 'sha256')
 	return hashlib[pref](str)
 end
 
