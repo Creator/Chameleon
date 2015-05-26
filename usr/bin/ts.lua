@@ -226,10 +226,11 @@ function ret.run(name)
   local ok, err = loadfile(name)
   if not ok then
     printError('error loading typesetter file ' .. name .. ':\n\t' .. err)
-    return
+    return false
   end
   setfenv(ok, env)
   ok()
+  return true
 end
 
 return ret

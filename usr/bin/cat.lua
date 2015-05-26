@@ -84,4 +84,5 @@ function main(...)
   end
 
   read(rever, files)
+  return true
 end

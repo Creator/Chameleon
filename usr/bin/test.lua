@@ -21,53 +21,32 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 ]]
-
 function main(...)
-  local url;
-  local out;
+  local expr, inv;
 
-  for opt, arg in (run.require 'posix').getopt('hvO:', ...) do
-    if opt == false then
-      url = arg
+  for opt, arg in (run.require 'posix').getopt('hvrn:z:d:e:', ...) do
+    if opt == false and not expr then expr = (arg ~= nil)
     elseif opt == 'h' then
-      (run.require 'info').usage('curl', 'cat url', '<url> [-O file]', {
-        h = 'print this usage information',
-        v = 'print version information',
-        O = 'write the downloaded data to a file.'
-      })
-    elseif opt == 'v' then
-      print('cat url version 1')
-    elseif opt == 'O' then
-      out = arg
-    end
+      (run.require 'info').usage('test', 'evaluate an expression', '<flag> <opt>', {
+        h = 'print this help',
+        v = 'print version',
+        r = 'invert output (similar to !<expr> in C)',
+        n = 'lenght of string is not zero',
+        z = 'lenght of string is zero',
+        d = 'file is a directory',
+        e = 'file exists'
+      }) return
+    elseif opt == 'n' then expr = (#arg ~= 0) break
+    elseif opt == 'z' then expr = (#arg == 0) break
+    elseif opt == 'r' then inv = true
+    elseif opt == 'd' then expr = (fs.isDir(arg))
+    elseif opt == 'e' then expr = (fs.exists(arg))
+    elseif opt == 'v' then print('test version 1') end
   end
 
-  if out and url then
-    local file = fs.open(out, 'w')
-    local han = http.get(url)
-
-    if not han then
-      printError('failed to get ' .. url)
-      return
-    end
-
-    file.writeLine(han.readAll())
-    file.close()
-  elseif url then
-    local han = http.get(url)
-
-    if not han then
-      printError('failed to get ' .. url)
-      return false
-    end
-    print(han.readAll())
+  if inv then
+    return (expr == true and false or true)
   else
-    (run.require 'info').usage('curl', 'cat url', '<url> [-O file]', {
-      h = 'print this usage information',
-      v = 'print version information',
-      O = 'write the downloaded data to a file.'
-    })
+    return expr
   end
-  return true
-
 end

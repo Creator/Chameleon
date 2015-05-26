@@ -95,4 +95,6 @@ function main(...)
       })
     end
   end
+  return true
+
 end

@@ -73,4 +73,6 @@ function main(...)
   else
     printm()
   end
+  return true
+
 end

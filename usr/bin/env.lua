@@ -51,4 +51,6 @@ function main(...)
       end
     end
   end
+  return true
+
 end

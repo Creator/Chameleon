@@ -102,7 +102,7 @@ function shell.run(file, ...)
     rp = f
     local fn = fs.getDrive(f) == 'rom' and os.run or run.exece
 
-    fn({
+    return pcall(fn, {
       ['shell'] = shell,
       ['env'] = env
     }, f, ...)
@@ -143,7 +143,7 @@ function shell.getPath()
 end
 
 function shell.exit()
-  error(2)
+
 end
 
 shell.setAlias("ls", "list")
@@ -195,10 +195,11 @@ function main()
     table.insert(history, inp )
     local f, p = shell.parse(inp)
 
-    local ok, err = pcall(shell.run, f, unpack(p))
+    local ok, _, val = pcall(shell.run, f, unpack(p))
 		if not ok then
-			printError('error executing ' .. f .. ': ' .. err)
+			printError('error executing ' .. f .. ': ' .. _)
 		end
+		env._LAST_ = val
   end
 end
 

@@ -151,5 +151,6 @@ function main(...)
       list(shell.resolve(args[i]), false)
     end
   end
-  return
+  return true
+
 end

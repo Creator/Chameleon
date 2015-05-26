@@ -139,4 +139,6 @@ function main(...)
   if not op then op = 'status' end
 
   operations[op](args and unpack(args) or nil)
+  return true
+
 end

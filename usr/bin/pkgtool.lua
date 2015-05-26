@@ -34,10 +34,14 @@ local function printh()
     R = 'remove a package',
     ['B/M/P'] = 'build a package for installation'
   })
+  return true
+
 end
 
 local function versio()
   print(('pkgtool version 1'))
+  return true
+
 end
 
 local function build(file)
@@ -78,7 +82,7 @@ local function build(file)
   });
 
   (run.require 'lar').write(file.target or file .. '.lar', ret)
-
+  return true
 end
 
 local function remove(file, targ)
@@ -98,7 +102,7 @@ local function remove(file, targ)
   else
     printError('unknown package ' .. file)
   end
-
+  return true
 end
 
 local function install(file, targ)
@@ -126,6 +130,7 @@ local function install(file, targ)
   if inp:lower() == 'y' then
     fs.delete(file)
   end
+  return true
 end
 
 function main(...)
@@ -152,7 +157,7 @@ function main(...)
     end
   end
   if op then
-    op(target and shell.resolve(target) or 'no target required', targ)
+    return op(target and shell.resolve(target) or 'no target required', targ)
   else
     printh()
   end

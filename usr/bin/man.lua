@@ -34,8 +34,8 @@ function main(...)
         h = 'print this help information',
         v = 'print version information',
         T = 'try to render with TS.'
-      }) return
-    elseif opt == 'v' then print('manual version 1') return
+      }) return true
+    elseif opt == 'v' then print('manual version 1') return true
     elseif opt == 'T' then ts = true end
   end
   if not name then
@@ -43,14 +43,14 @@ function main(...)
       h = 'print this help information',
       v = 'print version information',
       T = 'try to render with TS.'
-    }) return
+    }) return true
   end
   if name then
     for i = 1, #man_path do
       if fs.exists(fs.combine(man_path[i], name)) then
         if ts then
           libts.run(fs.combine(fs.combine(man_path[i], ''), name))
-          return
+          return true
         end
         local data = fs.open(fs.combine(man_path[i], name), 'r')
         local tabl = data.readAll()
@@ -59,11 +59,11 @@ function main(...)
         local x, y = term.getSize()
 
         textutils.pagedPrint(tabl, (env and env.MAN_TABSIZE) or y)
-        return
+        return true
       elseif fs.exists(fs.combine(fs.combine(man_path[i], 'programs'), name)) then
         if ts then
           libts.run(fs.combine(fs.combine(man_path[i], 'programs'), name))
-          return
+          return true
         end
         local data = fs.open(fs.combine(fs.combine(man_path[i], 'programs'), name), 'r')
         local tabl = data.readAll()
@@ -72,11 +72,11 @@ function main(...)
         local x, y = term.getSize()
 
         textutils.pagedPrint(tabl, (env and env.MAN_TABSIZE) or y)
-        return
+        return true
       elseif fs.exists(fs.combine(fs.combine(man_path[i], 'libraries'), name)) then
         if ts then
           libts.run(fs.combine(fs.combine(man_path[i], 'libraries'), name))
-          return
+          return true
         end
 
         local data = fs.open(fs.combine(fs.combine(man_path[i], 'libraries'), name), 'r')
@@ -85,11 +85,11 @@ function main(...)
 
         local x, y = term.getSize()
         textutils.pagedPrint(tabl, (env and env.MAN_TABSIZE) or y)
-        return
+        return true
       elseif fs.exists(fs.combine(fs.combine(man_path[i], 'utilities'), name)) then
         if ts then
           libts.run(fs.combine(fs.combine(man_path[i], 'utilities'), name))
-          return
+          return true
         end
         local data = fs.open(fs.combine(fs.combine(man_path[i], 'utilities'), name), 'r')
         local tabl = data.readAll()
@@ -98,11 +98,11 @@ function main(...)
         local x, y = term.getSize()
 
         textutils.pagedPrint(tabl, (env and env.MAN_TABSIZE) or y)
-        return
+        return true
       elseif fs.exists(fs.combine(fs.combine(man_path[i], 'sysfns'), name)) then
         if ts then
           libts.run(fs.combine(fs.combine(man_path[i], 'sysfns'), name))
-          return
+          return true
         end
         local data = fs.open(fs.combine(fs.combine(man_path[i], 'sysfns'), name), 'r')
         local tabl = data.readAll()
@@ -111,8 +111,9 @@ function main(...)
         local x, y = term.getSize()
 
         textutils.pagedPrint(tabl, (env and env.MAN_TABSIZE) or y)
-        return
+        return true
       end
     end
   end
+  return false
 end
