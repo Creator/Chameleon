@@ -99,7 +99,9 @@ local function _write_larball(file, data)
   local file_h = fs.open(file, 'w')
   local data = enc(textutils.serialize(data))
   local count = 0
-
+  if not file_h then
+    error('failed to open file.')
+  end
   for k, v in pairs(tt(data, 64)) do
     file_h.writeLine(v)
     count = count + 1
@@ -113,6 +115,7 @@ end
 
 local function _do_unlarring(root, data)
   for i = 1, #data do
+    print(data[i].meta.path)
     local file = fs.open(fs.combine(root, data[i].meta.path), 'w')
     file.writeLine(data[i].data)
     file.close()
