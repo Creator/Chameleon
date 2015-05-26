@@ -93,7 +93,8 @@ local function list(dir, rec)
     end)
 
     for k, v in pairs(ls) do
-      write(('%s - %sB: '):format(fs.isDir(v) and 'd' or 'f', tostring(szo(v))))
+      v = getfenv(2).shell.resolve(v)
+      write(('%s - %sKiB (1024B): '):format(fs.isDir(v) and 'd' or 'f', tostring(math.floor(szo(v) / 1024))))
       if fs.isDir(v) and not fs.isReadOnly(v) then
         if term.isColor and term.isColor() then
           term.setTextColor(env and env.LS_COLORS and env.LS_COLORS.DIR or colors.blue)
@@ -135,7 +136,7 @@ function main(...)
   for opt, arg in (run.require 'posix').getopt('hv', ...) do
     if opt == false then
       if #arg >= 0 then
-        table.insert(args, arg)
+        table.insert(args, shell.resolve(arg))
       end
     elseif opt == 'h' then (run.require 'info').usage('lsa', 'list all', '[dir1[dir2...]]', {
       h = 'print this help information',
