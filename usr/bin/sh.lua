@@ -68,7 +68,7 @@ function shell.getAlias(s)
   return shell.isAlias(s) and shell.aliases[s]
 end
 
-function shell.resolveP(file)
+function shell.resolveP(file, quiet)
   if shell.isAlias(file) then
     return shell.getAlias(file)
   end
@@ -84,7 +84,9 @@ function shell.resolveP(file)
     end
   end
 
-  --printError('failed to find file')
+	if not quiet then
+	  printError('failed to find file')
+	end
 	return false
 end
 
@@ -200,7 +202,7 @@ function main()
 		if not ok then
 			printError('error executing ' .. f .. ': ' .. _)
 		end
-		env.LAST = (shell.resolveP(f) == false and {false, 'program not found'} or {true, value})
+		env.LAST = (shell.resolveP(f, true) == false and {false, 'program not found'} or {true, value})
   end
 end
 

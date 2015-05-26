@@ -80,7 +80,7 @@ function main(...)
 
   for opt, arg in (run.require 'posix').getopt('hv', ...) do
     if opt == false then
-      if fs.exists(arg) and arg ~= ' ' then
+      if fs.exists(arg) and #arg ~= 0 then
         table.insert(files, arg)
       end
     elseif opt == 'h' then usag() return
