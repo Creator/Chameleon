@@ -200,11 +200,12 @@ function main(...)
     for i = 1, #args do
       if fs.exists(shell.resolve(args[i])) and not fs.isDir(shell.resolve(args[i])) then
         local x = fs.open(shell.resolve(args[i]), 'r')
-        print(shell.resolve(args[i]) == '/' and '/' or '/' .. shell.resolve(args[i]).. ': ' .. hash(x.readAll()))
+        local data = x.readAll()
+        print(shell.resolve(args[i]) == '/' and '/' or '/' .. shell.resolve(args[i]).. ': ' .. hash(data))
 
         if outp then
           local han = fs.open(shell.resolve(outp), fs.exists(shell.resolve(outp)) and 'a' or 'w')
-          han.writeLine(algo .. ' hash of ' .. shell.resolve(args[i]) == '/' and '/' or '/' .. shell.resolve(args[i]).. ': ' .. hash(x.readAll()))
+          han.writeLine(algo .. ' hash of ' .. shell.resolve(args[i]) == '/' and '/' or '/' .. shell.resolve(args[i]).. ': ' .. hash(data))
           han.close()
         end
         x.close()
