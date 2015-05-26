@@ -38,21 +38,20 @@ local function listAll(_path, _files)
 end
 
 function main(...)
-  local verb, comp, extr, file, dir = nil, nil, nil, nil, nil
+  local verb, comp, extr, file, dir, size = nil, nil, nil, nil, nil, size
 
-  for opt, arg in (run.require 'posix').getopt('hvxcf:d:', ...) do
+  for opt, arg in (run.require 'posix').getopt('hsvxcf:d:', ...) do
     if opt == 'h' then
       (run.require 'info').usage('lar', 'lua archiver', '<flag> <dir>', {
         h = 'print help',
         v = 'print version',
         c = 'compress',
-        v = 'toggle verbosity',
         f = 'target/input file',
-        x = 'eXtract.'
+        x = 'extract.'
       }) return true
     elseif opt == 'v' then print('lar version 1') return true
     elseif opt == 'x' then
-      if not comp then
+      if not comp and not size then
         extr = true
       else
         printError('can not compress AND extract at the same time.')
@@ -62,10 +61,14 @@ function main(...)
     elseif opt == 'd' then
       dir = shell.resolve(arg)
     elseif opt == 'c' then
-      if not extr then
+      if not extr and not size then
         comp = true
       else
         printError('can not compress AND extract at the same time.')
+      end
+    elseif opt == 's' then
+      if not comp and not extr then
+        size = true
       end
     end
   end
@@ -88,9 +91,26 @@ function main(...)
       end
     end
     (run.require 'lar').write(file, ret)
+    return true
   elseif extr and file then
     local dir = dir or shell.dir();
     (run.require 'lar').unlar(dir, file)
+    return true
+  elseif size and file then
+    local tabl = (run.require 'lar').read(file)
+    local size = 0
+
+    for i = 1, #tabl do
+      size = size + tabl[i].meta.size
+    end
+
+    (run.require 'info').print({
+      { text = 'Total size of archive '},
+      { txtCol = colors.orange, text = file},
+      { txtCol = colors.red, text = '\n\tfiles: ' .. size / 1000 .. 'KB' .. '\n\tarchive file: ' .. fs.getSize(file) / 1000 .. 'KB'},
+      { txtCol = colors.red, text = '\n\tpadding: ' .. fs.getSize(file) / 1000 - size / 1000 .. 'KB'}
+    })
+
   elseif not file then
     (run.require 'info').usage('lar', 'lua archiver', '<flag> <dir>', {
       h = 'print help',
@@ -100,5 +120,6 @@ function main(...)
       f = 'target/input file',
       x = 'eXtract.'
     })
+    return false
   end
 end

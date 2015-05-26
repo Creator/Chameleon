@@ -63,7 +63,12 @@ local function build(file)
         {txtCol = colors.blue, text = file.files[i].path}
       });
       local data = http.get(file.files[i].url).readAll()
-
+      if file.files[i].hash then
+        if not (run.require 'hash').sha256(data) == file.files[i].hash then
+          printError('Failed to download ' .. file.files[i].url)
+          return false
+        end
+      end
       table.insert(ret,{
         ['data'] = data,
         ['meta'] = {

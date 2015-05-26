@@ -157,5 +157,13 @@ return{
       fs.delete(fs.combine(root, v.meta.path))
     end
   end,
-  ['write'] = _write_larball
+  ['write'] = _write_larball,
+  ['read'] = function(file)
+    local  x = fs.open(file, 'r')
+    local tabl = textutils.unserialize(dec(x.readAll()))
+    x.close()
+
+    return tabl
+  end
+
 }
