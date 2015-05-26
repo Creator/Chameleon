@@ -80,8 +80,8 @@ function main(...)
 
   for opt, arg in (run.require 'posix').getopt('hv', ...) do
     if opt == false then
-      if fs.exists(arg) and #arg ~= 0 then
-        table.insert(files, arg)
+      if fs.exists(shell.resolve(arg)) and #arg ~= 0 then
+        table.insert(files, shell.resolve(arg))
       end
     elseif opt == 'h' then usag() return
     elseif opt == 'v' then vers() return end
