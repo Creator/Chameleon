@@ -89,7 +89,7 @@ function main(...)
     if fs.exists(v) then
       (run.require 'info').print({
         { txtCol = colors.green, text = string.format('%s: %s', fs.isDir(v) and 'd' or 'f', v)},
-        { text = ' - ' .. tostring(math.floor(szo(v) / 1024)) .. 'KB (1024B)'},
+        { text = ' - ' .. tostring(math.floor(szo(v) / 1024)) .. 'KiB (1024B)'},
       })
     end
   end
