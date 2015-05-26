@@ -85,7 +85,7 @@ function main(...)
           ['data'] = data,
           ['meta'] = {
             ['size'] = #data,
-            ['path'] = v
+            ['path'] = v,
           }
         })
       end

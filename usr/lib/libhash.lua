@@ -359,8 +359,15 @@ function fcs16.hash(str) -- Returns FCS16 Hash of @str
     return  bit.bxor(uFcs16, 65535)
 end
 
-return {
+local hashlib = {
   ['sha256'] = sha256,
   ['crc32'] = crc32,
-  ['fcs16'] = fcs16.hash
+  ['fcs16'] = fcs16.hash,
 }
+
+function hashlib.hash (str)
+	local pref = (getfenv(2).env and getfenv(2).env.PREFFERED_HASH or 'sha256')
+	return hashlib[pref]()
+end
+
+return hashlib
