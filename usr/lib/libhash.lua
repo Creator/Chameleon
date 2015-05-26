@@ -367,7 +367,7 @@ local hashlib = {
 
 function hashlib.hash (str)
 	local pref = (getfenv(2).env and getfenv(2).env.PREFFERED_HASH or 'sha256')
-	return hashlib[pref]()
+	return hashlib[pref](str)
 end
 
 return hashlib
