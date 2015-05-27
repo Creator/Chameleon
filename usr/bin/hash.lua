@@ -49,11 +49,7 @@ function main(...)
     elseif opt == 'C' then
 
       local printFancy = (run.require 'info').print
-      printFancy({
-        {txtCol = colors.green, text = '->'},
-        {text = ' Checking algorithm '},
-        {txtCol = colors.blue, text = 'sha256'}
-      })
+      print('-> Checking algorithm sha256')
       local sharesults = {}
 
       for i = 1, 5 do
@@ -78,12 +74,7 @@ function main(...)
         else shafails = shafails + 1 end
       end
 
-      printFancy({
-        {txtCol = colors.green, text = '->'},
-        {text = ' Checking algorithm '},
-        {txtCol = colors.blue, text = 'crc32'}
-      })
-
+      print('-> Checking algorithm crc32')
       local crcresults = {}
 
       for i = 1, 5 do
@@ -108,11 +99,8 @@ function main(...)
         else crcfails = crcfails + 1 end
       end
 
-      printFancy({
-        {txtCol = colors.green, text = '->'},
-        {text = ' Checking algorithm '},
-        {txtCol = colors.blue, text = 'crc32'}
-      })
+      print('-> Checking algorithm fcs16')
+
 
       local fcsresults = {}
 
@@ -139,11 +127,8 @@ function main(...)
         else fcsfails = fcsfails + 1 end
       end
 
-      printFancy({
-        {txtCol = colors.green, text = '->'},
-        {text = ' Checking algorithm '},
-        {txtCol = colors.blue, text = 'message digest 5'}
-      })
+      print('-> Checking algorithm message digest 5')
+
 
       local md5results = {}
 
