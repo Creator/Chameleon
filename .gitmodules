@@ -1,4 +1,3 @@
-[submodule "kernel"]
-	path = kernel
-	url = git@github.com:Creator/Kernel
-	branch = rewrite
+[submodule "Kernel"]
+	path = Kernel
+	url = ../Kernel.git
